@@ -1,6 +1,7 @@
 [tool.ruff]
 required-version = ">=0.5.0"
 target-version = "py39"
+line-length = 100
 exclude = ['generated']
 
 [tool.ruff.lint]

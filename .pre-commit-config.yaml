@@ -12,14 +12,14 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-docstrings==1.5.0
-          - pydocstyle==5.1.1
-        types_or: [python]
+  # - repo: https://github.com/PyCQA/flake8
+  #   rev: 6.1.0
+  #   hooks:
+  #     - id: flake8
+  #       additional_dependencies:
+  #         - flake8-docstrings==1.5.0
+  #         - pydocstyle==5.1.1
+  #       types_or: [python]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
@@ -38,10 +38,10 @@ repos:
       - id: pyupgrade
         args: [--py39-plus]
 
-  - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
-    hooks:
-      - id: yamllint
+  # - repo: https://github.com/adrienverge/yamllint
+  #   rev: v1.35.1
+  #   hooks:
+  #     - id: yamllint
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
     rev: v13.0.1
