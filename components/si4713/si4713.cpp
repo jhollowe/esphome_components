@@ -23,6 +23,7 @@ void Si4713Component::setup() {
   this->reset_();
 
   this->power_up_();
+  // rev_info_t info = this->get_info_();
   this->get_info_();
 }
 
@@ -58,11 +59,10 @@ void Si4713Component::power_up_() {
       // digital input mode
       // 0x0f
   };
-  status_t status;
+  uint8_t status;
   ESP_LOGV(TAG, "Powering up Si4713...");
   this->write_register(SI4710_CMD_POWER_UP, args, sizeof(args));
   status = this->wait_for_cts_();
-  ESP_LOGD(TAG, "Power up status after polling:0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
   this->print_status(status);
 }
 
@@ -80,18 +80,24 @@ void Si4713Component::get_info_() {
   // SI4713Status status = *(SI4713Status *) &buf[0];
   // rev_info_t revinfo = &buf[1];
   // this->pretty_print_rev_info(revinfo);
-  this->print_status(buf[0]);
-  this->wait_for_cts_();
-  this->print_status(this->wait_for_cts_());
+
+  // pass the existing status byte, if it indicates CTS, we don't have to query at all
+  this->wait_for_cts_(buf[0]);
 }
 
-status_t Si4713Component::wait_for_cts_() {
+uint8_t Si4713Component::wait_for_cts_() {
   // Poll the status register until the CTS bit is set
   uint8_t status;
   do {
     this->read_register(0x00, &status, 1);
   } while ((status & SI4710_STATUS_CTS) == 0);
-  return (status_t) status;
+  return status;
+}
+uint8_t Si4713Component::wait_for_cts_(uint8_t status) {
+  if ((status & SI4710_STATUS_CTS) == 0) {
+    return this->wait_for_cts_();
+  }
+  return status;
 }
 
 }  // namespace si4713
