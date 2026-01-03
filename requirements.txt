@@ -1,3 +1,5 @@
 pre-commit
+clang-format
+clang-tidy
 
 esphome

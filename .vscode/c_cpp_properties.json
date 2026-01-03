@@ -1,0 +1,23 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/components/",
+                "/usr/local/lib/python3.13/site-packages/",
+                // "/home/vscode/.platformio/packages/framework-espidf/components",
+                // "/workspaces/esphome_components/example_configs/.esphome/build/radio-tx/.piolibdeps/",
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "recursiveIncludes": {
+                "order": "depthFirst"
+            },
+            "configurationProvider": "platformio.platformio-ide"
+        }
+    ],
+    "version": 4
+}
