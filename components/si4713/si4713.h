@@ -8,39 +8,41 @@
 namespace esphome {
 namespace si4713 {
 
+static const char *const TAG = "si4713";
+
 #define SI4710_ADDR0 0x11       ///< if SEN is low
 #define SI4710_ADDR1 0x63       ///< if SEN is high, default!
 #define SI4710_STATUS_CTS 0x80  ///< read status
 
 // Status register bitfield structure based on provided spec
-struct {
+struct status_t {
   uint8_t STCINT : 1;    // Bit 0: Seek/Tune Complete Interrupt
   uint8_t ASQINT : 1;    // Bit 1: Signal Quality Interrupt
   uint8_t RDSINT : 1;    // Bit 2: RDS Interrupt
   uint8_t reserved : 3;  // Bits 3-5: Reserved
   uint8_t ERR : 1;       // Bit 6: Error
   uint8_t CTS : 1;       // Bit 7: Clear to Send
-} status_t;
+} __attribute__((packed));
 
-// struct rev_info_t {
-//   uint8_t part_number;
-//   uint8_t firmware_major;
-//   uint8_t firmware_minor;
-//   uint16_t patch_version;
-//   uint8_t component_major;
-//   uint8_t component_minor;
-//   uint8_t chip_revision;
+struct rev_info_t {
+  uint8_t part_number;
+  uint8_t firmware_major;
+  uint8_t firmware_minor;
+  uint16_t patch_version;
+  uint8_t component_major;
+  uint8_t component_minor;
+  uint8_t chip_revision;
 
-//   rev_info_t(const uint8_t *data) {
-//     part_number = data[0];
-//     firmware_major = data[1];
-//     firmware_minor = data[2];
-//     patch_version = (static_cast<uint16_t>(data[3]) << 8) | data[4];
-//     component_major = data[5];
-//     component_minor = data[6];
-//     chip_revision = data[7];
-//   }
-// };
+  rev_info_t(const uint8_t *data) {
+    part_number = data[0];
+    firmware_major = data[1];
+    firmware_minor = data[2];
+    patch_version = (static_cast<uint16_t>(data[3]) << 8) | data[4];
+    component_major = data[5];
+    component_minor = data[6];
+    chip_revision = data[7];
+  }
+};
 
 /* COMMANDS */
 #define SI4710_CMD_POWER_UP \
@@ -154,20 +156,29 @@ class Si4713Component : public Component, public i2c::I2CDevice {
   void dump_config() override;
   // void update() override;
 
-  // void pretty_print_rev_info(rev_info_t info) {
-  //   ESP_LOGI("si4713.revinfo", "Part Number: 0x%02X", info.part_number);
-  //   ESP_LOGI("si4713.revinfo", "Firmware Version: %u.%u", info.firmware_major, info.firmware_minor);
-  //   ESP_LOGI("si4713.revinfo", "Patch Version: 0x%04X", info.patch_version);
-  //   ESP_LOGI("si4713.revinfo", "Component Version: %u.%u", info.component_major, info.component_minor);
-  //   ESP_LOGI("si4713.revinfo", "Chip Revision: 0x%02X", info.chip_revision);
-  // }
+  void pretty_print_rev_info(rev_info_t info) {
+    ESP_LOGI("si4713.revinfo", "Part Number: 0x%02X", info.part_number);
+    ESP_LOGI("si4713.revinfo", "Firmware Version: %u.%u", info.firmware_major, info.firmware_minor);
+    ESP_LOGI("si4713.revinfo", "Patch Version: 0x%04X", info.patch_version);
+    ESP_LOGI("si4713.revinfo", "Component Version: %u.%u", info.component_major, info.component_minor);
+    ESP_LOGI("si4713.revinfo", "Chip Revision: 0x%02X", info.chip_revision);
+  }
+
+  void print_status(uint8_t status) { print_status(*(status_t *) &status); }
+  void print_status(status_t status) {
+    ESP_LOGD(TAG, "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
+    ESP_LOGD(TAG, "  CTS: %u", status.CTS);
+    ESP_LOGD(TAG, "  ERR: %u", status.ERR);
+    ESP_LOGD(TAG, "  RDSINT: %u", status.RDSINT);
+    ESP_LOGD(TAG, "  ASQINT: %u", status.ASQINT);
+    ESP_LOGD(TAG, "  STCINT: %u", status.STCINT);
+  }
 
  protected:
   void reset_();
   void power_up_();
   void get_info_();
-  uint8_t wait_for_cts_();
-  void print_status(uint8_t status);
+  status_t wait_for_cts_();
 
   GPIOPin *reset_pin_;
 };

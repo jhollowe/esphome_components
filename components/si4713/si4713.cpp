@@ -6,8 +6,6 @@
 namespace esphome {
 namespace si4713 {
 
-static const char *const TAG = "si4713";
-
 void Si4713Component::dump_config() {
   ESP_LOGCONFIG(TAG, "Si4713Component");
   LOG_I2C_DEVICE(this);
@@ -60,11 +58,12 @@ void Si4713Component::power_up_() {
       // digital input mode
       // 0x0f
   };
-  uint8_t status;
+  status_t status;
   ESP_LOGV(TAG, "Powering up Si4713...");
   this->write_register(SI4710_CMD_POWER_UP, args, sizeof(args));
   status = this->wait_for_cts_();
-  ESP_LOGD(TAG, "Power up status after polling: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
+  ESP_LOGD(TAG, "Power up status after polling:0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
+  this->print_status(status);
 }
 
 void Si4713Component::get_info_() {
@@ -82,26 +81,17 @@ void Si4713Component::get_info_() {
   // rev_info_t revinfo = &buf[1];
   // this->pretty_print_rev_info(revinfo);
   this->print_status(buf[0]);
-  buf[0] = this->wait_for_cts_();
-  this->print_status(buf[0]);
+  this->wait_for_cts_();
+  this->print_status(this->wait_for_cts_());
 }
 
-void Si4713Component::print_status(uint8_t status) {
-  ESP_LOGD(TAG, "Status Register: 0x%02X", status);
-  ESP_LOGD(TAG, "  STCINT: %u", (status >> 0) & 0x01);
-  ESP_LOGD(TAG, "  ASQINT: %u", (status >> 1) & 0x01);
-  ESP_LOGD(TAG, "  RDSINT: %u", (status >> 2) & 0x01);
-  ESP_LOGD(TAG, "  ERR: %u", (status >> 6) & 0x01);
-  ESP_LOGD(TAG, "  CTS: %u", (status >> 7) & 0x01);
-}
-
-uint8_t Si4713Component::wait_for_cts_() {
+status_t Si4713Component::wait_for_cts_() {
   // Poll the status register until the CTS bit is set
   uint8_t status;
   do {
     this->read_register(0x00, &status, 1);
   } while ((status & SI4710_STATUS_CTS) == 0);
-  return status;
+  return (status_t) status;
 }
 
 }  // namespace si4713
