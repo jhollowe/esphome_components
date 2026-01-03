@@ -13,14 +13,14 @@ namespace si4713 {
 #define SI4710_STATUS_CTS 0x80  ///< read status
 
 // Status register bitfield structure based on provided spec
-// struct status_t {
-//   uint8_t STCINT : 1;    // Bit 0: Seek/Tune Complete Interrupt
-//   uint8_t ASQINT : 1;    // Bit 1: Signal Quality Interrupt
-//   uint8_t RDSINT : 1;    // Bit 2: RDS Interrupt
-//   uint8_t reserved : 3;  // Bits 3-5: Reserved
-//   uint8_t ERR : 1;       // Bit 6: Error
-//   uint8_t CTS : 1;       // Bit 7: Clear to Send
-// };
+struct {
+  uint8_t STCINT : 1;    // Bit 0: Seek/Tune Complete Interrupt
+  uint8_t ASQINT : 1;    // Bit 1: Signal Quality Interrupt
+  uint8_t RDSINT : 1;    // Bit 2: RDS Interrupt
+  uint8_t reserved : 3;  // Bits 3-5: Reserved
+  uint8_t ERR : 1;       // Bit 6: Error
+  uint8_t CTS : 1;       // Bit 7: Clear to Send
+} status_t;
 
 // struct rev_info_t {
 //   uint8_t part_number;
@@ -167,6 +167,7 @@ class Si4713Component : public Component, public i2c::I2CDevice {
   void power_up_();
   void get_info_();
   uint8_t wait_for_cts_();
+  void print_status(uint8_t status);
 
   GPIOPin *reset_pin_;
 };
