@@ -53,7 +53,7 @@
 #define SI4713_PROP_TX_RDS_DEVIATION \
   0x2103  ///< Configures the RDS/RBDS frequency deviation level. Units are in
           ///< 10 Hz increments. Default is 2 kHz.
-#define SI4713_PROP_TX_LINE_LEVEL_INPUT_LEVEL \
+#define SI4713_PROP_TX_LINE_INPUT_LEVEL \
   0x2104  ///< Configures maximum analog line input level to the LIN/RIN pins to
           ///< reach the maximum deviation level pro- grammed into the audio
           ///< deviation property TX Audio Deviation. Default is 636 mVPK.

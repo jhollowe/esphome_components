@@ -31,7 +31,14 @@ void Si4713Component::setup() {
     ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
   }
 
-  this->tuneFM(9330);  // default to 93.3 MHz
+  this->measure_freq(9330);
+  this->print_tune_status(this->get_tune_status());
+  this->set_freq(9330);  // set to 93.3 MHz
+  this->print_tune_status(this->get_tune_status());
+  this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
+  // this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL, 500);  // set line input level to 500 mVPK
+  this->set_power(100);
+  this->print_tune_status(this->get_tune_status());
 }
 
 void Si4713Component::update() {
@@ -39,7 +46,7 @@ void Si4713Component::update() {
   tune_status_t ts = this->get_tune_status();
   this->print_tune_status(ts);
 
-  asq_status_t asq = this->get_asq_status();
+  asq_status_t asq = this->get_asq_status(1);
   this->print_asq_status(asq);
 }
 
@@ -139,7 +146,7 @@ tune_status_t Si4713Component::get_tune_status(bool clear_flags) {
       SI4710_CMD_TX_TUNE_STATUS,
       static_cast<uint8_t>(clear_flags ? 0x1 : 0x0),  // INTACK
   };
-  uint8_t resp[7];  // status + 7 bytes of response
+  uint8_t resp[8];  // status + 7 bytes of response
   this->write_read(args, sizeof(args), resp, sizeof(resp));
 
   // parse the returned data into a tune_status_t struct (keep the status byte)
@@ -161,7 +168,7 @@ asq_status_t Si4713Component::get_asq_status(bool clear_flags) {
   return asqstatus;
 }
 
-void Si4713Component::tuneFM(uint16_t freqKHz) {
+void Si4713Component::set_freq(uint16_t freqKHz) {
   // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
   // and in 50 kHz increments. The value is in 10 kHz units.
   ESP_LOGI(TAG, "Tuning to %0.1f MHz", freqKHz / 100.0);
@@ -176,7 +183,44 @@ void Si4713Component::tuneFM(uint16_t freqKHz) {
   uint8_t status;
   do {
     status = this->wait_for_cts_();
-  } while ((status & SI4710_STATUS_STCINT) != 0 && (status & SI4710_STATUS_CTS) == 0);
+  } while ((status & SI4710_STATUS_CTS) == 0);
+  // } while ((status & SI4710_STATUS_STCINT) != 0 && (status & SI4710_STATUS_CTS) == 0);
+}
+
+void Si4713Component::set_power(uint8_t power) {
+  // power must be between 88 and 115 (dBµV) or 0 for off.
+  ESP_LOGI(TAG, "Setting power to %u dBµV", power);
+  uint8_t args[] = {
+      0,  // reserved
+      0,  // reserved
+      power,
+      0,  // let the IC choose the antenna capacitance
+  };
+  this->write_register(SI4710_CMD_TX_TUNE_POWER, args, sizeof(args));
+
+  // wait CTS to be set
+  this->wait_for_cts_();
+}
+
+void Si4713Component::measure_freq(uint16_t freqKHz) {
+  // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
+  // and in 50 kHz increments. The value is in 10 kHz units.
+  ESP_LOGI(TAG, "Measuring Noise on to %0.1f MHz", freqKHz / 100.0);
+  uint8_t args[] = {
+      0,                                     // reserved
+      static_cast<uint8_t>(freqKHz >> 8),    // frequency high byte
+      static_cast<uint8_t>(freqKHz & 0xFF),  // frequency low byte
+      0,                                     // let the IC choose the antenna capacitance
+  };
+  this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args));
+
+  // wait for the tuning to be done and CTS to be set
+  // uint8_t status;
+  // do {
+  //   status = this->wait_for_cts_();
+  // } while ((status & SI4710_STATUS_CTS) == 0);
+
+  this->wait_for_cts_();
 }
 
 }  // namespace si4713

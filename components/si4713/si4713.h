@@ -41,13 +41,13 @@ struct tune_status_t {
   bool stcint;
 
   tune_status_t(const uint8_t *data) {
-    // MUST be 7 bytes
-    // data layout (7 bytes): [STATUS, FREQ_H, FREQ_L, reserved, RF_POWER, CAPACITOR, RNL]
+    // MUST be 8 bytes
+    // data layout (8 bytes): [STATUS, reserved, FREQ_H, FREQ_L, reserved, RF_POWER, CAPACITOR, RNL]
     stcint = (data[0] & (1u << 2)) ? true : false;
-    freq = (static_cast<uint16_t>(data[1]) << 8) | data[2];
-    power = data[4];
-    tune_capacitor = data[5];
-    noise = data[6];
+    freq = (static_cast<uint16_t>(data[2]) << 8) | data[3];
+    power = data[5];
+    tune_capacitor = data[6];
+    noise = data[7];
   }
 };
 
@@ -82,7 +82,9 @@ class Si4713Component : public PollingComponent, public i2c::I2CDevice {
   tune_status_t get_tune_status(bool clear_flags);
   asq_status_t get_asq_status() { return this->get_asq_status(false); };
   tune_status_t get_tune_status() { return this->get_tune_status(false); };
-  void tuneFM(uint16_t freq_khz);
+  void set_freq(uint16_t freq_khz);
+  void measure_freq(uint16_t freq_khz);
+  void set_power(uint8_t power);
 
   // float get_setup_priority() const override;
   void setup() override;
@@ -150,10 +152,10 @@ class Si4713Component : public PollingComponent, public i2c::I2CDevice {
     // clang-format off
     ESP_LOGD(TAG,
       "Tune Status:\n"
-      "  Frequency: %u kHz\n"
-      "  Power Level: %u dBµV\n"
+      "  Frequency: %05u kHz\n"
+      "  Power Level: %03u dBµV\n"
       "  Tune Capacitor: %u\n"
-      "  Noise Level: %u"
+      "  Noise Level: %u\n"
       "  STCINT: %u",
       tunestatus.freq,
       tunestatus.power,
