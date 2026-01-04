@@ -74,104 +74,40 @@ struct asq_status_t {
 // class Si4713Component : public Component, public i2c::I2CDevice {
 class Si4713Component : public PollingComponent, public i2c::I2CDevice {
  public:
-  void set_reset_pin(GPIOPin *reset_pin) { this->reset_pin_ = reset_pin; }
-
-  void set_property(uint16_t property, uint16_t value);
-  uint16_t get_property(uint16_t property);
-  asq_status_t get_asq_status(bool clear_flags);
-  tune_status_t get_tune_status(bool clear_flags);
-  asq_status_t get_asq_status() { return this->get_asq_status(false); };
-  tune_status_t get_tune_status() { return this->get_tune_status(false); };
-  void set_freq(uint16_t freq_khz);
-  void measure_freq(uint16_t freq_khz);
-  void set_power(uint8_t power);
-
+  // Interface functions
   // float get_setup_priority() const override;
   void setup() override;
   void dump_config() override;
   void update() override;
 
-  void pretty_print_rev_info(rev_info_t info) {
-    // clang-format off
-    ESP_LOGI(TAG,
-      "HW Revision Info:\n"
-      "  Part Number: %d\n"
-      "  Firmware Version: %u.%u\n"
-      "  Patch Version: 0x%04X\n"
-      "  Component Version: %u.%u\n"
-      "  Chip Revision: 0x%02X",
-      info.part_number,
-      info.firmware_major, info.firmware_minor,
-      info.patch_version,
-      info.component_major, info.component_minor,
-      info.chip_revision
-    );
-    // clang-format on
-  }
+  // Pin setters
+  void set_reset_pin(GPIOPin *reset_pin) { this->reset_pin_ = reset_pin; }
 
-  void print_status(uint8_t status) {
-    // clang-format off
-    ESP_LOGD(TAG,
-      "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")\n"
-      "  CTS:    %u\n"
-      "  ERR:    %u\n"
-      "  RDSINT: %u\n"
-      "  ASQINT: %u\n"
-      "  STCINT: %u\n",
-      status, BYTE_TO_BINARY(status),
-      status & SI4710_STATUS_CTS ? 1 : 0,
-      status & SI4710_STATUS_ERR ? 1 : 0,
-      status & SI4710_STATUS_RDSINT ? 1 : 0,
-      status & SI4710_STATUS_ASQINT ? 1 : 0,
-      status & SI4710_STATUS_STCINT ? 1 : 0);
-    // clang-format on
-  }
+  // Command functions
+  rev_info_t get_info();
+  void set_property(uint16_t property, uint16_t value);
+  uint16_t get_property(uint16_t property);
+  asq_status_t get_asq_status(bool clear_flags = false);
+  tune_status_t get_tune_status(bool clear_flags = false);
+  // asq_status_t get_asq_status() { return this->get_asq_status(false); };
+  // tune_status_t get_tune_status() { return this->get_tune_status(false); };
+  void set_freq(uint16_t freq_khz);
+  void measure_freq(uint16_t freq_khz);
+  void set_power(uint8_t power);
+  void setup_rds(uint16_t programID, uint8_t pty = 0);
+  void set_rds_ps(const char *s);
 
-  void print_asq_status(asq_status_t asq) {
-    // clang-format off
-    ESP_LOGD(TAG,
-      "ASQ Status:\n"
-      "  ASQINT: %u\n"
-      "  OVERMOD: %u\n"
-      "  IALH: %u\n"
-      "  IALL: %u\n"
-      "  Input Audio Level: %u dBuV",
-      asq.asqint,
-      asq.overmod,
-      asq.in_audio_detect_high,
-      asq.in_audio_detect_low,
-      // asq.asqint ? 1 : 0,
-      // asq.overmod ? 1 : 0,
-      // asq.in_audio_detect_high ? 1 : 0,
-      // asq.in_audio_detect_low ? 1 : 0,
-      asq.in_audio_level);
-    // clang-format on
-  }
-
-  void print_tune_status(tune_status_t tunestatus) {
-    // clang-format off
-    ESP_LOGD(TAG,
-      "Tune Status:\n"
-      "  Frequency: %05u kHz\n"
-      "  Power Level: %03u dBµV\n"
-      "  Tune Capacitor: %u\n"
-      "  Noise Level: %u\n"
-      "  STCINT: %u",
-      tunestatus.freq,
-      tunestatus.power,
-      tunestatus.tune_capacitor,
-      tunestatus.noise,
-      tunestatus.stcint ? 1 : 0);
-    // clang-format on
-  }
+  // Print/Log functions
+  void print_rev_info(const rev_info_t info);
+  void print_status(uint8_t status);
+  void print_asq_status(asq_status_t asq);
+  void print_tune_status(tune_status_t tunestatus);
 
  protected:
   void reset_();
   void power_up_();
   void power_down_();
-  rev_info_t get_info_();
   uint8_t wait_for_cts_();
-  uint8_t wait_for_cts_(uint8_t status);
 
   GPIOPin *reset_pin_;
 };
