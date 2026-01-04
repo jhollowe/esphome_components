@@ -7,15 +7,23 @@ from esphome.const import CONF_ID, CONF_RESET_PIN
 DEPENDENCIES = ["i2c"]
 
 si4713_ns = cg.esphome_ns.namespace("si4713")
-
 Si4713Component = si4713_ns.class_("Si4713Component", cg.Component, i2c.I2CDevice)
 
-CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend(
-    {
-        cv.GenerateID(CONF_ID): cv.declare_id(Si4713Component),
-        cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
-    }
-).extend(i2c.i2c_device_schema(0x63))
+DEFAULT_POLLING_INTERVAL = "60s"
+
+CONFIG_SCHEMA = (
+    cv.COMPONENT_SCHEMA.extend(
+        {
+            cv.GenerateID(CONF_ID): cv.declare_id(Si4713Component),
+            cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+        }
+    )
+    .extend(i2c.i2c_device_schema(0x63))
+    .extend(cv.polling_component_schema(DEFAULT_POLLING_INTERVAL))
+)
+
+# Datasheet: https://cdn-shop.adafruit.com/datasheets/Si4712-13-B30.pdf
+# Control Guide: https://cdn-shop.adafruit.com/datasheets/SiLabs%20Programming%20guide%20AN332.pdf
 
 
 async def to_code(config):
@@ -26,12 +34,3 @@ async def to_code(config):
     if reset_pin_config := config.get(CONF_RESET_PIN):
         pin = await cg.gpio_pin_expression(reset_pin_config)
         cg.add(var.set_reset_pin(pin))
-
-    # if CONF_ON_FAN in config:
-    #     await automation.build_automation(
-    #         var.get_fan_trigger(), [(int, "speed")], config[CONF_ON_FAN]
-    #     )
-    # if CONF_ON_LIGHT in config:
-    #     await automation.build_automation(var.get_light_trigger(), [], config[CONF_ON_LIGHT])
-    # if CONF_ON_BUZZER in config:
-    #     await automation.build_automation(var.get_buzzer_trigger(), [], config[CONF_ON_BUZZER])
