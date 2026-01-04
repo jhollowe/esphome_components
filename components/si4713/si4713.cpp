@@ -30,17 +30,18 @@ void Si4713Component::setup() {
   if (info.part_number != 13) {
     ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
   }
+
+  this->tuneFM(9330);  // default to 93.3 MHz
 }
 
-void Si4713Component::temp_testing() {
+void Si4713Component::update() {
+  // TODO remove
   tune_status_t ts = this->get_tune_status();
   this->print_tune_status(ts);
 
   asq_status_t asq = this->get_asq_status();
   this->print_asq_status(asq);
 }
-
-void Si4713Component::update() { this->temp_testing(); }
 
 void Si4713Component::reset_() {
   // RST needs to be pulled low to reset
@@ -141,8 +142,8 @@ tune_status_t Si4713Component::get_tune_status(bool clear_flags) {
   uint8_t resp[7];  // status + 7 bytes of response
   this->write_read(args, sizeof(args), resp, sizeof(resp));
 
-  // parse the returned data into a tune_status_t struct (skip the status byte)
-  tune_status_t tunestatus = &resp[1];
+  // parse the returned data into a tune_status_t struct (keep the status byte)
+  tune_status_t tunestatus = resp;
   return tunestatus;
 }
 
@@ -155,9 +156,27 @@ asq_status_t Si4713Component::get_asq_status(bool clear_flags) {
   uint8_t resp[5];  // status + 4 bytes of response
   this->write_read(args, sizeof(args), resp, sizeof(resp));
 
-  // parse the returned data into an asq_status_t struct (skip the status byte)
-  asq_status_t asqstatus = &resp[1];
+  // parse the returned data into an asq_status_t struct (keep the status byte)
+  asq_status_t asqstatus = resp;
   return asqstatus;
+}
+
+void Si4713Component::tuneFM(uint16_t freqKHz) {
+  // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
+  // and in 50 kHz increments. The value is in 10 kHz units.
+  ESP_LOGI(TAG, "Tuning to %0.1f MHz", freqKHz / 100.0);
+  uint8_t args[] = {
+      0,  // reserved
+      static_cast<uint8_t>(freqKHz >> 8),
+      static_cast<uint8_t>(freqKHz & 0xFF),
+  };
+  this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args));
+
+  // wait for Wait for the tuning to be done and CTS to be set
+  uint8_t status;
+  do {
+    status = this->wait_for_cts_();
+  } while ((status & SI4710_STATUS_STCINT) != 0 && (status & SI4710_STATUS_CTS) == 0);
 }
 
 }  // namespace si4713
