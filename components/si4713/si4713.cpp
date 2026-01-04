@@ -23,27 +23,24 @@ void Si4713Component::setup() {
   this->reset_();
 
   this->power_up_();
-  // rev_info_t info = this->get_info_();
-  this->get_info_();
+  rev_info_t info = this->get_info_();
+  this->pretty_print_rev_info(info);
+  if (info.part_number != 13) {
+    ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
+  }
 }
 
-// void Si4713Component::update() {
-//   // nothing to do here yet
-// }
+void Si4713Component::update() {
+  // nothing to do here yet
+}
 
 void Si4713Component::reset_() {
-  // reset pin configured so reset before finishing setup
   // RST needs to be pulled low to reset
-  if (this->reset_pin_ != nullptr) {
-    this->reset_pin_->digital_write(true);
-    delay(10);
-    this->reset_pin_->digital_write(false);
-    delay(10);
-    this->reset_pin_->digital_write(true);
-  }
-
-  // wait for it to settle
+  this->reset_pin_->digital_write(true);
   delay(10);
+  this->reset_pin_->digital_write(false);
+  delay(10);
+  this->reset_pin_->digital_write(true);
 }
 
 void Si4713Component::power_up_() {
@@ -66,23 +63,25 @@ void Si4713Component::power_up_() {
   this->print_status(status);
 }
 
-void Si4713Component::get_info_() {
-  uint8_t buf[9];
+// void Si4713Component::power_down_() {
+//   uint8_t status;
+//   ESP_LOGV(TAG, "Powering down Si4713...");
+//   this->write_register(SI4710_CMD_POWER_DOWN, nullptr, 0);
+//   status = this->wait_for_cts_();
+//   this->print_status(status);
+// }
+
+rev_info_t Si4713Component::get_info_() {
+  uint8_t buf[9];  // status byte + 8 bytes of info
   this->read_register(SI4710_CMD_GET_REV, buf, 9);
 
-  ESP_LOGI("si4713.revinfo", "Part Number: (si47)%u", buf[1]);
-  ESP_LOGI("si4713.revinfo", "Firmware Version: %u.%u", buf[2], buf[3]);
-  ESP_LOGI("si4713.revinfo", "Patch Version: 0x%04X", (static_cast<uint16_t>(buf[4]) << 8) | buf[5]);
-  ESP_LOGI("si4713.revinfo", "Component Version: %u.%u", buf[6], buf[7]);
-  ESP_LOGI("si4713.revinfo", "Chip Revision: 0x%02X", buf[8]);
-
-  // parse the returned data into
-  // SI4713Status status = *(SI4713Status *) &buf[0];
-  // rev_info_t revinfo = &buf[1];
-  // this->pretty_print_rev_info(revinfo);
+  // parse the returned data into a rev_info_t struct (skip the status byte)
+  rev_info_t revinfo = &buf[1];
+  this->pretty_print_rev_info(revinfo);
 
   // pass the existing status byte, if it indicates CTS, we don't have to query at all
   this->wait_for_cts_(buf[0]);
+  return &(buf[1]);
 }
 
 uint8_t Si4713Component::wait_for_cts_() {
@@ -93,6 +92,7 @@ uint8_t Si4713Component::wait_for_cts_() {
   } while ((status & SI4710_STATUS_CTS) == 0);
   return status;
 }
+
 uint8_t Si4713Component::wait_for_cts_(uint8_t status) {
   if ((status & SI4710_STATUS_CTS) == 0) {
     return this->wait_for_cts_();

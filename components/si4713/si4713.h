@@ -22,6 +22,7 @@ struct rev_info_t {
   uint8_t chip_revision;
 
   rev_info_t(const uint8_t *data) {
+    // MUST be 8 bytes
     part_number = data[0];
     firmware_major = data[1];
     firmware_minor = data[2];
@@ -32,28 +33,29 @@ struct rev_info_t {
   }
 };
 
-// class Si4713Component : public PollingComponent, public i2c::I2CDevice {
-class Si4713Component : public Component, public i2c::I2CDevice {
+// class Si4713Component : public Component, public i2c::I2CDevice {
+class Si4713Component : public PollingComponent, public i2c::I2CDevice {
  public:
   void set_reset_pin(GPIOPin *reset_pin) { this->reset_pin_ = reset_pin; }
 
   // float get_setup_priority() const override;
   void setup() override;
   void dump_config() override;
-  // void update() override;
+  void update() override;
 
   void pretty_print_rev_info(rev_info_t info) {
-    ESP_LOGI("si4713.revinfo", "Part Number: 0x%02X", info.part_number);
-    ESP_LOGI("si4713.revinfo", "Firmware Version: %u.%u", info.firmware_major, info.firmware_minor);
-    ESP_LOGI("si4713.revinfo", "Patch Version: 0x%04X", info.patch_version);
-    ESP_LOGI("si4713.revinfo", "Component Version: %u.%u", info.component_major, info.component_minor);
-    ESP_LOGI("si4713.revinfo", "Chip Revision: 0x%02X", info.chip_revision);
+    ESP_LOGI(TAG, "Si4713 Revision Info:");
+    ESP_LOGI(TAG, "  Part Number: 0x%02X", info.part_number);
+    ESP_LOGI(TAG, "  Firmware Version: %u.%u", info.firmware_major, info.firmware_minor);
+    ESP_LOGI(TAG, "  Patch Version: 0x%04X", info.patch_version);
+    ESP_LOGI(TAG, "  Component Version: %u.%u", info.component_major, info.component_minor);
+    ESP_LOGI(TAG, "  Chip Revision: 0x%02X", info.chip_revision);
   }
 
   void print_status(uint8_t status) {
     ESP_LOGD(TAG, "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
-    ESP_LOGD(TAG, "  CTS: %u", status & SI4710_STATUS_CTS ? 1 : 0);
-    ESP_LOGD(TAG, "  ERR: %u", status & SI4710_STATUS_ERR ? 1 : 0);
+    ESP_LOGD(TAG, "  CTS:    %u", status & SI4710_STATUS_CTS ? 1 : 0);
+    ESP_LOGD(TAG, "  ERR:    %u", status & SI4710_STATUS_ERR ? 1 : 0);
     ESP_LOGD(TAG, "  RDSINT: %u", status & SI4710_STATUS_RDSINT ? 1 : 0);
     ESP_LOGD(TAG, "  ASQINT: %u", status & SI4710_STATUS_ASQINT ? 1 : 0);
     ESP_LOGD(TAG, "  STCINT: %u", status & SI4710_STATUS_STCINT ? 1 : 0);
@@ -62,7 +64,7 @@ class Si4713Component : public Component, public i2c::I2CDevice {
  protected:
   void reset_();
   void power_up_();
-  void get_info_();
+  rev_info_t get_info_();
   uint8_t wait_for_cts_();
   uint8_t wait_for_cts_(uint8_t status);
 
