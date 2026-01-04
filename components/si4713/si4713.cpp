@@ -77,7 +77,6 @@ rev_info_t Si4713Component::get_info_() {
 
   // parse the returned data into a rev_info_t struct (skip the status byte)
   rev_info_t revinfo = &buf[1];
-  this->pretty_print_rev_info(revinfo);
 
   // pass the existing status byte, if it indicates CTS, we don't have to query at all
   this->wait_for_cts_(buf[0]);

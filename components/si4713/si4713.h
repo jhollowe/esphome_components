@@ -44,21 +44,39 @@ class Si4713Component : public PollingComponent, public i2c::I2CDevice {
   void update() override;
 
   void pretty_print_rev_info(rev_info_t info) {
-    ESP_LOGI(TAG, "Si4713 Revision Info:");
-    ESP_LOGI(TAG, "  Part Number: 0x%02X", info.part_number);
-    ESP_LOGI(TAG, "  Firmware Version: %u.%u", info.firmware_major, info.firmware_minor);
-    ESP_LOGI(TAG, "  Patch Version: 0x%04X", info.patch_version);
-    ESP_LOGI(TAG, "  Component Version: %u.%u", info.component_major, info.component_minor);
-    ESP_LOGI(TAG, "  Chip Revision: 0x%02X", info.chip_revision);
+    // clang-format off
+    ESP_LOGI(TAG,
+      "HW Revision Info:\n"
+      "  Part Number: %d\n"
+      "  Firmware Version: %u.%u\n"
+      "  Patch Version: 0x%04X\n"
+      "  Component Version: %u.%u\n"
+      "  Chip Revision: 0x%02X",
+      info.part_number,
+      info.firmware_major, info.firmware_minor,
+      info.patch_version,
+      info.component_major, info.component_minor,
+      info.chip_revision
+    );
+    // clang-format on
   }
 
   void print_status(uint8_t status) {
-    ESP_LOGD(TAG, "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")", status, BYTE_TO_BINARY(status));
-    ESP_LOGD(TAG, "  CTS:    %u", status & SI4710_STATUS_CTS ? 1 : 0);
-    ESP_LOGD(TAG, "  ERR:    %u", status & SI4710_STATUS_ERR ? 1 : 0);
-    ESP_LOGD(TAG, "  RDSINT: %u", status & SI4710_STATUS_RDSINT ? 1 : 0);
-    ESP_LOGD(TAG, "  ASQINT: %u", status & SI4710_STATUS_ASQINT ? 1 : 0);
-    ESP_LOGD(TAG, "  STCINT: %u", status & SI4710_STATUS_STCINT ? 1 : 0);
+    // clang-format off
+    ESP_LOGD(TAG,
+      "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")\n",
+      "  CTS:    %u\n",
+      "  ERR:    %u\n",
+      "  RDSINT: %u\n",
+      "  ASQINT: %u\n",
+      "  STCINT: %u\n",
+      status, BYTE_TO_BINARY(status)
+      status & SI4710_STATUS_CTS ? 1 : 0,
+      status & SI4710_STATUS_ERR ? 1 : 0,
+      status & SI4710_STATUS_RDSINT ? 1 : 0,
+      status & SI4710_STATUS_ASQINT ? 1 : 0,
+      status & SI4710_STATUS_STCINT ? 1 : 0);
+    // clang-format on
   }
 
  protected:
