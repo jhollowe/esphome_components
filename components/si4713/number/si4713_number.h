@@ -16,5 +16,15 @@ class Si4713FrequencyNumber : public number::Number {
   Si4713Component *parent_;
 };
 
+class Si4713PowerNumber : public number::Number {
+ public:
+  Si4713PowerNumber(Si4713Component *parent) : parent_(parent) {}
+  void control(float value) override;
+  void dump_config() override;
+
+ protected:
+  Si4713Component *parent_;
+};
+
 }  // namespace si4713
 }  // namespace esphome

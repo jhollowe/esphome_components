@@ -6,7 +6,8 @@ from esphome.const import CONF_ID, CONF_STEP, DEVICE_CLASS_FREQUENCY, ENTITY_CAT
 
 from .. import CONF_SI4713_ID, Si4713Component, si4713_ns
 
-Si4713Number = si4713_ns.class_("Si4713Number", number.Number)
+Si4713FrequencyNumber = si4713_ns.class_("Si4713FrequencyNumber", number.Number)
+Si4713PowerNumber = si4713_ns.class_("Si4713PowerNumber", number.Number)
 
 CONF_FREQUENCY = "frequency"
 CONF_POWER = "power_level"
@@ -15,7 +16,7 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(CONF_SI4713_ID): cv.use_id(Si4713Component),
         cv.Optional(CONF_FREQUENCY): number.number_schema(
-            Si4713Number,
+            Si4713FrequencyNumber,
             unit_of_measurement="MHz",  # TODO try to use a standard unit
             device_class=DEVICE_CLASS_FREQUENCY,
             entity_category=ENTITY_CATEGORY_CONFIG,
@@ -27,7 +28,15 @@ CONFIG_SCHEMA = cv.Schema(
                 # cv.Optional("max_value", default=108.0): cv.float_range(min=76.0, max=108.0),
             }
         ),
-        # TODO add power level number entity
+        cv.Optional(CONF_POWER): number.number_schema(
+            Si4713PowerNumber,
+            unit_of_measurement="dBµV",
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ).extend(
+            {
+                cv.Optional(CONF_STEP, default=1): cv.int_range(min=1, max=10),
+            }
+        ),
     }
 )
 
@@ -43,3 +52,12 @@ async def to_code(config):
         )
         cg.add(freq_num.set_parent(par))
         cg.add_define("USE_SI4713_FREQUENCY_NUMBER")
+    if power_cfg := config.get(CONF_POWER):
+        power_num = await number.new_number(
+            power_cfg,
+            min_value=power_cfg.get("min_value", 88.0),
+            max_value=power_cfg.get("max_value", 115.0),
+            step=power_cfg.get("step", 1),
+        )
+        cg.add(power_num.set_parent(par))
+        cg.add_define("USE_SI4713_POWER_NUMBER")

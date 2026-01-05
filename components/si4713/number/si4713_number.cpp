@@ -16,5 +16,17 @@ void Si4713FrequencyNumber::control(float value) {
 
 void Si4713FrequencyNumber::dump_config() { ESP_LOGCONFIG("si4713.number", "Si4713 Frequency Number"); }
 
+void Si4713PowerNumber::control(float value) {
+  // Value is in dBµV, typically between 88 and 115, or 0 for off
+  uint8_t power = static_cast<uint8_t>(value);
+  ESP_LOGI("si4713.number", "Setting power to %u dBµV", power);
+  if (parent_ != nullptr) {
+    parent_->set_power(power);
+  }
+  this->publish_state(value);
+}
+
+void Si4713PowerNumber::dump_config() { ESP_LOGCONFIG("si4713.number", "Si4713 Power Number"); }
+
 }  // namespace si4713
 }  // namespace esphome
