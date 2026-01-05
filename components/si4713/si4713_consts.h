@@ -1,3 +1,8 @@
+#pragma once
+
+namespace esphome {
+namespace si4713 {
+
 #define SI4710_ADDR0 0x11          ///< if SEN is low
 #define SI4710_ADDR1 0x63          ///< if SEN is high, default!
 #define SI4710_STATUS_CTS 0x80     ///< bit position of CTS flag in status byte
@@ -107,3 +112,6 @@
 #define SI4713_PROP_TX_RDS_FIFO_SIZE \
   0x2C07  ///< Number of blocks reserved for the FIFO. Note that the value
           ///< written must be one larger than the desired FIFO size.
+
+}  // namespace si4713
+}  // namespace esphome
