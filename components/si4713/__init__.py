@@ -6,7 +6,10 @@ from esphome.const import CONF_ID, CONF_RESET_PIN
 
 DEPENDENCIES = ["i2c"]
 
-si4713_ns = cg.esphome_ns.namespace("si4713")
+DOMAIN = "si4713"
+CONF_SI4713_ID = f"{DOMAIN}_id"
+
+si4713_ns = cg.esphome_ns.namespace(DOMAIN)
 Si4713Component = si4713_ns.class_("Si4713Component", cg.Component, i2c.I2CDevice)
 
 DEFAULT_POLLING_INTERVAL = "60s"
@@ -24,6 +27,13 @@ CONFIG_SCHEMA = (
 
 # Datasheet: https://cdn-shop.adafruit.com/datasheets/Si4712-13-B30.pdf
 # Control Guide: https://cdn-shop.adafruit.com/datasheets/SiLabs%20Programming%20guide%20AN332.pdf
+
+# Actions
+# Si4713SetFrequencyAction = si4713_ns.class_("Si4713SetFrequencyAction", automation.Action)
+# Si4713SetRDSAction = si4713_ns.class_("Si4713SetRDSAction", automation.Action)
+# Si4713GetPropertyAction = si4713_ns.class_("Si4713GetPropertyAction", automation.Action)
+# Si4713SetPropertyAction = si4713_ns.class_("Si4713SetPropertyAction", automation.Action)
+# Si4713GetASQAction = si4713_ns.class_("Si4713GetASQAction", automation.Action)
 
 
 async def to_code(config):

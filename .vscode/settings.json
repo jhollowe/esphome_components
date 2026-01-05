@@ -1,0 +1,9 @@
+{
+  "C_Cpp.files.exclude": {
+    "**/example_configs/.esphome/**": true,
+    "**/.vscode": true,
+    "**/.vs": true
+  },
+  "C_Cpp.clang_format_fallbackStyle": "none",
+  "C_Cpp.errorSquiggles": "disabled"
+}
