@@ -49,4 +49,4 @@ i2c:
   id: fm_tx_bus
 
 si4713:
-  reset_pin: GPIO5
+  reset_pin: GPIO20
