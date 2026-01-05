@@ -9,6 +9,7 @@ namespace si4713 {
 class Si4713FrequencyNumber : public number::Number {
  public:
   Si4713FrequencyNumber(Si4713Component *parent) : parent_(parent) {}
+  void set_parent(Si4713Component *parent) { parent_ = parent; }
   void control(float value) override;
   void dump_config() override;
 
@@ -19,6 +20,7 @@ class Si4713FrequencyNumber : public number::Number {
 class Si4713PowerNumber : public number::Number {
  public:
   Si4713PowerNumber(Si4713Component *parent) : parent_(parent) {}
+  void set_parent(Si4713Component *parent) { parent_ = parent; }
   void control(float value) override;
   void dump_config() override;
 

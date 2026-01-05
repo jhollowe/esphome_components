@@ -56,7 +56,7 @@ number:
     frequency:
       name: "FM Frequency"
       id: fm_freq
-      # min_value: 88.0
+      # min_value: 76.0
       # max_value: 108.0
       # step: 0.1
     power_level:

@@ -2,7 +2,7 @@
 import esphome.codegen as cg
 from esphome.components import number
 import esphome.config_validation as cv
-from esphome.const import CONF_ID, CONF_STEP, DEVICE_CLASS_FREQUENCY, ENTITY_CATEGORY_CONFIG
+from esphome.const import CONF_STEP, DEVICE_CLASS_FREQUENCY, ENTITY_CATEGORY_CONFIG
 
 from .. import CONF_SI4713_ID, Si4713Component, si4713_ns
 
@@ -42,7 +42,7 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 async def to_code(config):
-    par = await cg.get_variable(config[CONF_ID])
+    par = await cg.get_variable(config[CONF_SI4713_ID])
     if freq_cfg := config.get(CONF_FREQUENCY):
         freq_num = await number.new_number(
             freq_cfg,
