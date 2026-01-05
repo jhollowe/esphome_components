@@ -42,8 +42,10 @@ void Si4713Component::setup() {
   this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x7);  // Enable pilot, L-R, and RDS
 
   this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
-  uint8_t ps[] = {0x0, 'J', 'H', 'F', 'M'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps, sizeof(ps));
+  uint8_t ps1_1[] = {0x0, 'J', 'H', 'o', 'l'};
+  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
+  uint8_t ps1_2[] = {0x1, 'L', 'O', 'W', 'E'};
+  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
   this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);  // 1 PS message
 }
 
@@ -108,6 +110,7 @@ uint8_t Si4713Component::wait_for_cts_() {
   // Poll the status register until the CTS bit is set
   uint8_t status;
   do {
+    ESP_LOGV(TAG, "Checking for CTS...");
     this->read_register(0x00, &status, 1);
   } while ((status & SI4710_STATUS_CTS) == 0);
   return status;
@@ -172,7 +175,7 @@ asq_status_t Si4713Component::get_asq_status(bool clear_flags) {
 void Si4713Component::set_freq(uint16_t freqKHz) {
   // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
   // and in 50 kHz increments. The value is in 10 kHz units.
-  ESP_LOGI(TAG, "Tuning to %0.1f MHz", freqKHz / 100.0);
+  ESP_LOGI(TAG, "Tuning to %0.2f MHz", freqKHz / 100.0);
   uint8_t args[] = {
       0,  // reserved
       static_cast<uint8_t>(freqKHz >> 8),
@@ -207,7 +210,7 @@ void Si4713Component::set_power(uint8_t power) {
 void Si4713Component::measure_freq(uint16_t freqKHz) {
   // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
   // and in 50 kHz increments. The value is in 10 kHz units.
-  ESP_LOGI(TAG, "Measuring Noise on to %0.1f MHz", freqKHz / 100.0);
+  ESP_LOGI(TAG, "Measuring Noise on %0.2f MHz", freqKHz / 100.0);
   uint8_t args[] = {
       0,                                     // reserved
       static_cast<uint8_t>(freqKHz >> 8),    // frequency high byte
@@ -246,7 +249,8 @@ void Si4713Component::setup_rds(uint16_t programID, uint8_t pty) {
   // 0 not traffic announcement
   // 1 music
   // 000 reserved
-  uint16_t ps_misc = 0x0001000000001000 | ((pty & 0x1F) << 7);
+  uint16_t ps_misc = 0x0001000000001000 | ((pty & 0x1F) << 5);
+  ESP_LOGD(TAG, "Setting RDS PS Misc to 0x%04X", ps_misc);
   this->set_property(SI4713_PROP_TX_RDS_PS_MISC, ps_misc);
 }
 
