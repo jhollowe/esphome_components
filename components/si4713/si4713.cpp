@@ -31,6 +31,8 @@ void Si4713Component::setup() {
     ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
   }
 
+  // TODO remove all below
+  // testing setup and hardcoded configuration
   this->measure_freq(9330);
   this->print_tune_status(this->get_tune_status());
   this->set_freq(9330);  // set to 93.3 MHz
@@ -51,7 +53,7 @@ void Si4713Component::setup() {
 }
 
 void Si4713Component::update() {
-  // TODO remove
+  // TODO remove debug print of dynamic statuses
   tune_status_t ts = this->get_tune_status();
   this->print_tune_status(ts);
 
@@ -250,7 +252,7 @@ void Si4713Component::setup_rds(uint16_t programID, uint8_t pty) {
   // 0 not traffic announcement
   // 1 music
   // 000 reserved
-  uint16_t ps_misc = 0x0001000000001000 | ((pty & 0x1F) << 5);
+  uint16_t ps_misc = 0b0001000000001000 | ((pty & 0x1F) << 5);
   ESP_LOGD(TAG, "Setting RDS PS Misc to 0x%04X", ps_misc);
   this->set_property(SI4713_PROP_TX_RDS_PS_MISC, ps_misc);
 }
@@ -268,6 +270,8 @@ void Si4713Component::set_rds_ps(const char *ps) {
     ESP_LOGW(TAG, "given RDS PS is empty; nothing to set");
     return;
   }
+
+  // TODO actually set the PS string in a loop over the slots
 
   // TODO set X_RDS_PS_MESSAGE_COUNT
 }
