@@ -12,6 +12,19 @@ namespace si4713 {
 
 static const char *const TAG = "si4713";
 
+class Si4713Component;
+
+class Si4713BaseListener {
+ public:
+  Si4713BaseListener() {}
+  Si4713BaseListener(Si4713Component *parent) : parent_(parent) {}
+
+  void set_parent(Si4713Component *parent) { parent_ = parent; }
+
+ protected:
+  Si4713Component *parent_;
+};
+
 // class Si4713Component : public Component, public i2c::I2CDevice {
 class Si4713Component : public PollingComponent, public i2c::I2CDevice {
  public:
