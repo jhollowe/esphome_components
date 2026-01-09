@@ -57,3 +57,6 @@ number:
     frequency:
       name: "${friendly_name} Frequency"
       id: tx_frequency
+    power_level:
+      name: "${friendly_name} Power"
+      id: tx_power

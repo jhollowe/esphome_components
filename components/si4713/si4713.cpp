@@ -15,12 +15,6 @@ void Si4713Component::dump_config() {
 }
 
 void Si4713Component::setup() {
-  // // no reset pin, hope it comes up
-  // if (this->reset_pin_ == nullptr) {
-  //   this->finish_setup_();
-  //   return;
-  // }
-
   this->reset_pin_->setup();
   this->reset_();
 
@@ -33,8 +27,11 @@ void Si4713Component::setup() {
 
   // TODO remove all below
   // testing setup and hardcoded configuration
+  this->print_tune_status(this->get_tune_status());
+  ESP_LOGD(TAG, "Measuring frequency");
   this->measure_freq(9330);
   this->print_tune_status(this->get_tune_status());
+  ESP_LOGD(TAG, "Setting frequency");
   this->set_freq(9330);  // set to 93.3 MHz
   this->print_tune_status(this->get_tune_status());
   // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control

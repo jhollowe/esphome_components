@@ -7,22 +7,22 @@
 namespace esphome {
 namespace si4713 {
 
-class Si4713BaseNumber : public number::Number, public Component {
- public:
-  Si4713BaseNumber() {}
-  Si4713BaseNumber(Si4713Component *parent) : parent_(parent) {}
+const char *const N_TAG = "si4713.number";
 
-  void set_parent(Si4713Component *parent) { parent_ = parent; }
-
- protected:
-  Si4713Component *parent_;
-};
+class Si4713BaseNumber : public number::Number, public Component, public Parented<Si4713Component> {};
 
 class Si4713FrequencyNumber : public Si4713BaseNumber {
- public:
   // overrides from interface (Component)
   void setup() override;
-  void dump_config() override;
+  void dump_config() { LOG_NUMBER("", "Si4713 Frequency Number", this); }
+  // overrides from interface (Number)
+  void control(float value) override;
+};
+
+class Si4713PowerNumber : public Si4713BaseNumber {
+  // overrides from interface (Component)
+  void setup() override;
+  void dump_config() { LOG_NUMBER("", "Si4713 Power Number", this); }
   // overrides from interface (Number)
   void control(float value) override;
 };
