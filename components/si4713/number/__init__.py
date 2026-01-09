@@ -35,11 +35,11 @@ CONFIG_SCHEMA = cv.Schema(
 async def to_code(config):
     par = await cg.get_variable(config[CONF_SI4713_ID])
     if freq_cfg := config.get(CONF_FREQUENCY):
-        await number.new_number(
+        freq_num = await number.new_number(
             freq_cfg,
-            par,
+            # par,
             min_value=freq_cfg.get("min_value", 76.0),
             max_value=freq_cfg.get("max_value", 108.0),
             step=freq_cfg.get("step", 0.05),
         )
-        # cg.add(freq_num.set_parent(par))
+        cg.add(freq_num.set_parent(par))

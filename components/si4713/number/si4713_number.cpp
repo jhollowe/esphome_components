@@ -17,6 +17,14 @@ void Si4713FrequencyNumber::control(float value) {
   this->publish_state(value);
 }
 
+void Si4713FrequencyNumber::setup() {
+  ESP_LOGD(N_TAG, "Setting up Si4713 Frequency Number");
+  tune_status_t t = parent_->get_tune_status();
+  float freq_mhz = t.freq / 100.0;
+  ESP_LOGI(N_TAG, "Initial frequency is %.2f MHz", freq_mhz);
+  this->publish_state(freq_mhz);
+}
+
 void Si4713FrequencyNumber::dump_config() { LOG_NUMBER(N_TAG, "Si4713 Frequency Number", this); }
 
 }  // namespace si4713

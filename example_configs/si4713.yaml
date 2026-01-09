@@ -50,3 +50,10 @@ i2c:
 
 si4713:
   reset_pin: GPIO20
+  id: tx_id
+
+number:
+  - platform: si4713
+    frequency:
+      name: "${friendly_name} Frequency"
+      id: tx_frequency

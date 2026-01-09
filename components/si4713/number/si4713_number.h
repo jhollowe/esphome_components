@@ -7,17 +7,24 @@
 namespace esphome {
 namespace si4713 {
 
-class Si4713FrequencyNumber : public number::Number, public Si4713BaseListener, public Component {
+class Si4713BaseNumber : public number::Number, public Component {
  public:
-  Si4713FrequencyNumber() {}
-  Si4713FrequencyNumber(Si4713Component *parent) : parent_(parent) {}
+  Si4713BaseNumber() {}
+  Si4713BaseNumber(Si4713Component *parent) : parent_(parent) {}
 
-  void setup() override { this->publish_state(93.3); }
-  void control(float value) override;
-  void dump_config() override;
+  void set_parent(Si4713Component *parent) { parent_ = parent; }
 
  protected:
   Si4713Component *parent_;
+};
+
+class Si4713FrequencyNumber : public Si4713BaseNumber {
+ public:
+  // overrides from interface (Component)
+  void setup() override;
+  void dump_config() override;
+  // overrides from interface (Number)
+  void control(float value) override;
 };
 
 }  // namespace si4713
