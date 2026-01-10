@@ -19,7 +19,7 @@ void Si4713FrequencyNumber::setup() {
   ESP_LOGD(N_TAG, "Setting up Si4713 Frequency Number");
   tune_status_t t = parent_->get_tune_status();
   float freq_mhz = t.freq / 100.0;
-  if (freq_khz == 0) {
+  if (freq_mhz == 0) {
     ESP_LOGI(N_TAG, "Initial frequency is 0 MHz; defaulting to 93.3 MHz");
     freq_mhz = 93.3;
   } else {

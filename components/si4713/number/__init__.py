@@ -1,4 +1,3 @@
-# Si4713 Frequency Number entity for ESPHome
 import esphome.codegen as cg
 from esphome.components import number
 import esphome.config_validation as cv
@@ -23,19 +22,19 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement="MHz",  # TODO try to use a standard unit
             device_class=DEVICE_CLASS_FREQUENCY,
             entity_category=ENTITY_CATEGORY_CONFIG,
-        ),
+        ).extend(cv.COMPONENT_SCHEMA),
         cv.Optional(CONF_POWER): number.number_schema(
             Si4713PowerNumber,
             unit_of_measurement="dBµV",  # TODO try to use a standard unit (UNIT_DECIBEL_MILLIWATT?)
             device_class=DEVICE_CLASS_EMPTY,
             entity_category=ENTITY_CATEGORY_CONFIG,
-        ),
+        ).extend(cv.COMPONENT_SCHEMA),
     }
 )
 
 
 async def to_code(config):
-    par = await cg.get_variable(config[CONF_SI4713_ID])
+    paren = await cg.get_variable(config[CONF_SI4713_ID])
     if freq_cfg := config.get(CONF_FREQUENCY):
         freq_num = await number.new_number(
             freq_cfg,
@@ -44,7 +43,7 @@ async def to_code(config):
             step=freq_cfg.get("step", 0.05),
         )
         await cg.register_component(freq_num, config)
-        cg.add(freq_num.set_parent(par))
+        cg.add(freq_num.set_parent(paren))
 
     if power_cfg := config.get(CONF_POWER):
         power_num = await number.new_number(
@@ -54,4 +53,4 @@ async def to_code(config):
             step=power_cfg.get("step", 1.0),
         )
         await cg.register_component(power_num, config)
-        cg.add(power_num.set_parent(par))
+        cg.add(power_num.set_parent(paren))
