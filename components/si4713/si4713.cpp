@@ -112,10 +112,15 @@ rev_info_t Si4713Hub::get_info() {
 uint8_t Si4713Hub::wait_for_cts_() {
   // Poll the status register until the CTS bit is set
   uint8_t status;
+  size_t max_attempts = 20;
   do {
     ESP_LOGV(TAG, "Checking for CTS...");
     this->read_register(0x00, &status, 1);
-  } while ((status & SI4710_STATUS_CTS) == 0);
+    max_attempts--;
+  } while ((status & SI4710_STATUS_CTS) == 0 && max_attempts > 0);
+  if (max_attempts == 0) {
+    this->status_set_error(LOG_STR("Timed out waiting for Clear To Send (CTS) from Si4713"));
+  }
   return status;
 }
 
