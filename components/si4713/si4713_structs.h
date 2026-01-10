@@ -1,5 +1,7 @@
 #pragma once
 
+#include <map>
+
 namespace esphome {
 namespace si4713 {
 
@@ -40,6 +42,7 @@ struct tune_status_t {
     tune_capacitor = data[6];
     noise = data[7];
   }
+  tune_status_t() = default;
 };
 
 struct asq_status_t {
@@ -60,7 +63,10 @@ struct asq_status_t {
     in_audio_detect_high = (data[1] & (1u << 1)) ? true : false;
     in_audio_detect_low = (data[1] & (1u << 0)) ? true : false;
   }
+  asq_status_t() = default;
 };
+
+using prop_table_t = std::map<uint16_t, uint16_t>;
 
 }  // namespace si4713
 }  // namespace esphome

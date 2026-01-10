@@ -51,6 +51,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_status(uint8_t status);
   void print_asq_status(asq_status_t asq);
   void print_tune_status(tune_status_t tunestatus);
+  void print_prop_table(prop_table_t);
 
  protected:
   void toggle_reset_pin_();
@@ -58,6 +59,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void power_down_();
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
+  void get_prop_table(prop_table_t &table);
+  // set_changed_properties(prop_table_t &current, prop_table_t &next);
 
   // TODO remove if unused
   void measure_freq(uint16_t freq_khz);
@@ -66,6 +69,20 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   bool enabled_;
   uint8_t power_;
+
+  // STATE MANAGEMENT
+  tune_status_t tune_status_curr_;
+  tune_status_t tune_status_next_;
+  asq_status_t asq_status_curr_;
+  asq_status_t asq_status_next_;
+
+  prop_table_t poperties_curr = {
+      {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},
+      {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   {SI4713_PROP_TX_RDS_PI, 0},
+      {SI4713_PROP_TX_RDS_PS_MIX, 0},        {SI4713_PROP_TX_RDS_PS_MISC, 0},
+      {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
+  };
+  prop_table_t poperties_next;
 };
 
 }  // namespace si4713

@@ -27,6 +27,12 @@ void Si4713Hub::setup() {
     ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
   }
 
+  // pull initial data to current state variables
+  tune_status_curr_ = this->get_tune_status(false);
+  asq_status_curr_ = this->get_asq_status(false);
+  this->get_prop_table(poperties_curr);
+  this->print_prop_table(poperties_curr);
+
   // TODO remove all below
   // testing setup and hardcoded configuration
   this->print_tune_status(this->get_tune_status());
@@ -172,6 +178,13 @@ asq_status_t Si4713Hub::get_asq_status(bool clear_flags) {
   // parse the returned data into an asq_status_t struct (keep the status byte)
   asq_status_t asqstatus = resp;
   return asqstatus;
+}
+
+void Si4713Hub::get_prop_table(prop_table_t &table) {
+  // read all tracked properties in the table and update their values
+  for (auto &item : table) {
+    item.second = this->get_property(item.first);
+  }
 }
 
 void Si4713Hub::set_freq(uint16_t freqKHz) {
@@ -369,6 +382,13 @@ void Si4713Hub::print_tune_status(tune_status_t tunestatus) {
       tunestatus.noise,
       tunestatus.stcint ? 1 : 0);
   // clang-format on
+}
+
+void Si4713Hub::print_prop_table(prop_table_t table) {
+  ESP_LOGI(TAG, "Si4713 Properties:");
+  for (const auto &item : table) {
+    ESP_LOGI(TAG, "  Property 0x%04X: 0x%04X", item.first, item.second);
+  }
 }
 
 }  // namespace si4713
