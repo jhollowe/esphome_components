@@ -10,14 +10,14 @@ DOMAIN = "si4713"
 CONF_SI4713_ID = f"{DOMAIN}_id"
 
 si4713_ns = cg.esphome_ns.namespace(DOMAIN)
-Si4713Component = si4713_ns.class_("Si4713Component", cg.Component, i2c.I2CDevice)
+Si4713Hub = si4713_ns.class_("Si4713Hub", cg.Component, i2c.I2CDevice)
 
 DEFAULT_POLLING_INTERVAL = "60s"
 
 CONFIG_SCHEMA = (
     cv.COMPONENT_SCHEMA.extend(
         {
-            cv.GenerateID(CONF_ID): cv.declare_id(Si4713Component),
+            cv.GenerateID(CONF_ID): cv.declare_id(Si4713Hub),
             cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
         }
     )

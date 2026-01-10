@@ -4,11 +4,11 @@ from esphome.components import number
 import esphome.config_validation as cv
 from esphome.const import DEVICE_CLASS_EMPTY, DEVICE_CLASS_FREQUENCY, ENTITY_CATEGORY_CONFIG
 
-from .. import CONF_SI4713_ID, DOMAIN, Si4713Component, si4713_ns
+from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, si4713_ns
 
 DEPENDENCIES = [DOMAIN]
 
-common_classes = [number.Number, cg.Parented.template(Si4713Component)]
+common_classes = [number.Number, cg.Parented.template(Si4713Hub)]
 Si4713FrequencyNumber = si4713_ns.class_("Si4713FrequencyNumber", *common_classes, cg.Component)
 Si4713PowerNumber = si4713_ns.class_("Si4713PowerNumber", *common_classes, cg.Component)
 
@@ -17,7 +17,7 @@ CONF_POWER = "power_level"
 
 CONFIG_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_SI4713_ID): cv.use_id(Si4713Component),
+        cv.GenerateID(CONF_SI4713_ID): cv.use_id(Si4713Hub),
         cv.Optional(CONF_FREQUENCY): number.number_schema(
             Si4713FrequencyNumber,
             unit_of_measurement="MHz",  # TODO try to use a standard unit

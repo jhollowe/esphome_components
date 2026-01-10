@@ -12,8 +12,8 @@ namespace si4713 {
 
 static const char *const TAG = "si4713";
 
-// class Si4713Component : public Component, public i2c::I2CDevice {
-class Si4713Component : public PollingComponent, public i2c::I2CDevice {
+// class Si4713Hub : public Component, public i2c::I2CDevice {
+class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
  public:
   // Interface functions
   // float get_setup_priority() const override;

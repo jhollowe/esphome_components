@@ -9,7 +9,7 @@ namespace si4713 {
 
 const char *const N_TAG = "si4713.number";
 
-class Si4713BaseNumber : public number::Number, public Component, public Parented<Si4713Component> {};
+class Si4713BaseNumber : public number::Number, public Component, public Parented<Si4713Hub> {};
 
 class Si4713FrequencyNumber : public Si4713BaseNumber {
   // overrides from interface (Component)
