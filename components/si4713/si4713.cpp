@@ -34,14 +34,14 @@ void Si4713Hub::setup() {
   // this->measure_freq(9330);
   // this->print_tune_status(this->get_tune_status());
   // ESP_LOGD(TAG, "Setting frequency");
-  // this->set_freq(9330);  // set to 93.3 MHz
+  this->set_freq(9330);  // set to 93.3 MHz
   // this->print_tune_status(this->get_tune_status());
 
   // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
   this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL,
                      0x1000 | 300);  // set line input level to 300 mVPK (attenuation setting 01 (max 301))
-  // this->set_power(100);
-  // this->print_tune_status(this->get_tune_status());
+  this->set_power(100);
+  this->print_tune_status(this->get_tune_status());
   // this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x7);  // Enable pilot, L-R, and RDS
 
   // this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)

@@ -28,8 +28,8 @@ ota:
     password: "91f3a25017022969968c7c7b2fe7721e"
 
 wifi:
-  ssid: !secret wifi_ssid
-  password: !secret wifi_password
+  ssid: !secret fake_wifi_ssid
+  password: !secret fake_wifi_password
 
   ap:
 
