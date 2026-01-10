@@ -52,6 +52,13 @@ si4713:
   reset_pin: GPIO20
   id: tx_id
 
+button:
+  - platform: si4713
+    reset:
+      name: "${friendly_name} Reset"
+      id: tx_reset
+
+
 number:
   - platform: si4713
     frequency:
@@ -60,6 +67,7 @@ number:
     power_level:
       name: "${friendly_name} Power"
       id: tx_power
+
 
 switch:
   - platform: si4713

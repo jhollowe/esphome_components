@@ -51,7 +51,5 @@ void Si4713PowerNumber::setup() {
   this->publish_state(pow);
 }
 
-// void Si4713FrequencyNumber::dump_config() { LOG_NUMBER(N_TAG, "Si4713 Frequency Number", this); }
-
 }  // namespace si4713
 }  // namespace esphome
