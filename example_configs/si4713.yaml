@@ -60,3 +60,10 @@ number:
     power_level:
       name: "${friendly_name} Power"
       id: tx_power
+
+switch:
+  - platform: si4713
+    enable_tx:
+      name: "${friendly_name} Enable Transmit"
+      id: tx_enable
+      restore_mode: RESTORE_DEFAULT_ON
