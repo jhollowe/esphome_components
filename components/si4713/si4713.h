@@ -37,15 +37,26 @@ class Si4713Component : public PollingComponent, public i2c::I2CDevice {
   // Pin setters
   void set_reset_pin(GPIOPin *reset_pin) { this->reset_pin_ = reset_pin; }
 
-  // Command functions
+  // Common status retrival functions
   rev_info_t get_info();
-  void set_property(uint16_t property, uint16_t value);
-  uint16_t get_property(uint16_t property);
   asq_status_t get_asq_status(bool clear_flags = true);
   tune_status_t get_tune_status(bool clear_flags = true);
+
+  // used by number components
   void set_freq(uint16_t freq_khz);
+  void set_power(uint8_t power);  // respects enabled_ flag
+
+  // used by switch components
+  void set_enabled(bool enabled);
+  bool get_enabled() const { return this->enabled_; }
+
+  // used by various components
+  // also public so lambda functions can access them
+  void set_property(uint16_t property, uint16_t value);
+  uint16_t get_property(uint16_t property);
+
+  // unused by components but public for lambda use
   void measure_freq(uint16_t freq_khz);
-  void set_power(uint8_t power);
   void setup_rds(uint16_t programID, uint8_t pty = 0);
   void set_rds_ps(const char *s);
 
@@ -56,12 +67,16 @@ class Si4713Component : public PollingComponent, public i2c::I2CDevice {
   void print_tune_status(tune_status_t tunestatus);
 
  protected:
-  void reset_();
+  void toggle_reset_pin_();
   void power_up_();
   void power_down_();
   uint8_t wait_for_cts_();
+  void set_power_direct_(uint8_t power);
 
   GPIOPin *reset_pin_;
+
+  bool enabled_{true};
+  uint8_t power_;
 };
 
 }  // namespace si4713

@@ -16,9 +16,10 @@ void Si4713Component::dump_config() {
 
 void Si4713Component::setup() {
   this->reset_pin_->setup();
-  this->reset_();
 
+  this->toggle_reset_pin_();
   this->power_up_();
+
   rev_info_t info = this->get_info();
   this->print_rev_info(info);
   if (info.part_number != 13) {
@@ -59,7 +60,7 @@ void Si4713Component::update() {
   this->print_asq_status(asq);
 }
 
-void Si4713Component::reset_() {
+void Si4713Component::toggle_reset_pin_() {
   // TODO make this non-blocking with callbacks
   // RST needs to be pulled low to reset
   this->reset_pin_->digital_write(true);
@@ -193,7 +194,29 @@ void Si4713Component::set_freq(uint16_t freqKHz) {
   this->wait_for_cts_();
 }
 
+void Si4713Component::set_enabled(bool enabled) {
+  this->enabled_ = enabled;
+  if (enabled) {
+    ESP_LOGI(TAG, "Transmitter enabled; applying stored power level of %u dBµV", this->power_);
+    this->set_power_direct_(this->power_);
+  } else {
+    ESP_LOGI(TAG, "Transmitter disabled");
+    this->set_power_direct_(0);  // set power to 0 to disable
+  }
+}
+
 void Si4713Component::set_power(uint8_t power) {
+  // store the desired power level
+  this->power_ = power;
+
+  if (this->enabled_) {
+    this->set_power_direct_(power);
+  } else {
+    ESP_LOGI(TAG, "Power setting of %u dBµV stored but not applied since transmitter is disabled", power);
+  }
+}
+
+void Si4713Component::set_power_direct_(uint8_t power) {
   // power must be between 88 and 115 (dBµV) or 0 for off.
   ESP_LOGI(TAG, "Setting power to %u dBµV", power);
   uint8_t args[] = {
