@@ -19,7 +19,12 @@ void Si4713FrequencyNumber::setup() {
   ESP_LOGD(N_TAG, "Setting up Si4713 Frequency Number");
   tune_status_t t = parent_->get_tune_status();
   float freq_mhz = t.freq / 100.0;
-  ESP_LOGI(N_TAG, "Initial frequency is %.2f MHz", freq_mhz);
+  if (freq_khz == 0) {
+    ESP_LOGI(N_TAG, "Initial frequency is 0 MHz; defaulting to 93.3 MHz");
+    freq_mhz = 93.3;
+  } else {
+    ESP_LOGI(N_TAG, "Initial frequency is %.2f MHz", freq_mhz);
+  }
   this->publish_state(freq_mhz);
 }
 
@@ -37,7 +42,12 @@ void Si4713PowerNumber::setup() {
   ESP_LOGD(N_TAG, "Setting up Si4713 Power Number");
   tune_status_t t = parent_->get_tune_status();
   float pow = t.power;
-  ESP_LOGI(N_TAG, "Initial power level is %.0f dBµV", pow);
+  if (pow == 0) {
+    ESP_LOGI(N_TAG, "Initial power level is 0 dBµV; defaulting to 100");
+    pow = 100;
+  } else {
+    ESP_LOGI(N_TAG, "Initial power level is %.0f dBµV", pow);
+  }
   this->publish_state(pow);
 }
 

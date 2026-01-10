@@ -20,6 +20,7 @@ void Si4713Component::setup() {
   this->toggle_reset_pin_();
   this->power_up_();
 
+  // Get hardware info and error if not Si4713
   rev_info_t info = this->get_info();
   this->print_rev_info(info);
   if (info.part_number != 13) {
