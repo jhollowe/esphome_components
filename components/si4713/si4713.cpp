@@ -30,9 +30,6 @@ void Si4713Hub::setup() {
   // TODO remove all below
   // testing setup and hardcoded configuration
   this->print_tune_status(this->get_tune_status());
-  // ESP_LOGD(TAG, "Measuring frequency");
-  // this->measure_freq(9330);
-  // this->print_tune_status(this->get_tune_status());
   // ESP_LOGD(TAG, "Setting frequency");
   this->set_freq(9330);  // set to 93.3 MHz
   // this->print_tune_status(this->get_tune_status());
@@ -40,16 +37,17 @@ void Si4713Hub::setup() {
   // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
   this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL,
                      0x1000 | 300);  // set line input level to 300 mVPK (attenuation setting 01 (max 301))
+  this->enabled_ = true;
   this->set_power(100);
   this->print_tune_status(this->get_tune_status());
   // this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x7);  // Enable pilot, L-R, and RDS
 
-  // this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
-  // uint8_t ps1_1[] = {0x0, 'J', 'H', 'O', 'L'};
-  // this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
-  // uint8_t ps1_2[] = {0x1, 'L', 'O', 'W', 'E'};
-  // this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
-  // this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);  // 1 PS message
+  this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
+  uint8_t ps1_1[] = {0x0, 'J', 'H', 'O', 'L'};
+  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
+  uint8_t ps1_2[] = {0x1, 'L', 'O', 'W', 'E'};
+  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
+  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);  // 1 PS message
 }
 
 void Si4713Hub::update() {
@@ -124,7 +122,6 @@ uint8_t Si4713Hub::wait_for_cts_() {
   return status;
 }
 
-// untested
 void Si4713Hub::set_property(uint16_t property, uint16_t value) {
   uint8_t args[] = {
       0,  // must always be 0
@@ -138,7 +135,6 @@ void Si4713Hub::set_property(uint16_t property, uint16_t value) {
   this->wait_for_cts_();
 }
 
-// untested
 uint16_t Si4713Hub::get_property(uint16_t property) {
   uint8_t args[] = {
       SI4710_CMD_GET_PROPERTY,
@@ -152,7 +148,6 @@ uint16_t Si4713Hub::get_property(uint16_t property) {
   return (static_cast<uint16_t>(resp[2]) << 8) | resp[3];
 }
 
-// untested
 tune_status_t Si4713Hub::get_tune_status(bool clear_flags) {
   uint8_t args[] = {
       SI4710_CMD_TX_TUNE_STATUS,
@@ -166,7 +161,6 @@ tune_status_t Si4713Hub::get_tune_status(bool clear_flags) {
   return tunestatus;
 }
 
-// untested
 asq_status_t Si4713Hub::get_asq_status(bool clear_flags) {
   uint8_t args[] = {
       SI4710_CMD_TX_ASQ_STATUS,
