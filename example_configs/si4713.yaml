@@ -58,6 +58,11 @@ button:
       name: "${friendly_name} Reset"
       id: tx_reset
 
+sensor:
+  - platform: si4713
+    line_level:
+      name: "${friendly_name} Line Input Level"
+      id: tx_line_level
 
 number:
   - platform: si4713

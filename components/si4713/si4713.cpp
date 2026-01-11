@@ -37,8 +37,12 @@ void Si4713Hub::setup() {
   }
 
   // pull initial data to current state variables
+  ESP_LOGV(TAG, "Pulling initial tune and ASQ statuses");
   tune_status_curr_ = this->get_tune_status(true);
   asq_status_curr_ = this->get_asq_status(true);
+  tune_status_last_ = tune_status_curr_;
+  asq_status_last_ = asq_status_curr_;
+  ESP_LOGV(TAG, "Pulling initial property table");
   this->get_prop_table(poperties_curr);
   this->print_prop_table(poperties_curr);
 
@@ -403,7 +407,7 @@ void Si4713Hub::print_asq_status(asq_status_t asq) {
       "  OVERMOD: %u\n"
       "  IALH: %u\n"
       "  IALL: %u\n"
-      "  Input Audio Level: %u dBuV",
+      "  Input Audio Level: %i dBfs",
       asq.asqint,
       asq.overmod,
       asq.in_audio_detect_high,

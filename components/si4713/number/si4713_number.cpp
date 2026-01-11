@@ -69,8 +69,10 @@ void Si4713MaxLineLevelNumber::control(float value) {
     } else if (level <= 636) {
       attenuation = 0b11;
     }
-    ESP_LOGI(N_TAG, "would set SI4713_PROP_TX_LINE_INPUT_LEVEL to 0x%04X", level | (attenuation << 12));
-    // parent_->get_properties_next()[SI4713_PROP_TX_LINE_INPUT_LEVEL] = level | (attenuation << 12);
+    // use get_properties_next() from parent_ to get the next property table
+    prop_table_t *props_next = parent_->get_properties_next();
+    // set the new value in the next properties table
+    (*props_next)[SI4713_PROP_TX_LINE_INPUT_LEVEL] = (attenuation << 12) | level;
   }
 }
 

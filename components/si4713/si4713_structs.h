@@ -46,7 +46,7 @@ struct tune_status_t {
 };
 
 struct asq_status_t {
-  uint8_t in_audio_level;
+  int8_t in_audio_level;  // 2's complement
   bool asqint;
   bool overmod;
   bool in_audio_detect_high;  // IALH
@@ -57,7 +57,7 @@ struct asq_status_t {
     // data layout (5 bytes): [STATUS, RESP1, RESP2, RESP3, RESP4]
     // STATUS: bit1 = ASQINT
     // RESP1: bit2 = OVERMOD, bit1 = IALH, bit0 = IALL
-    in_audio_level = data[4];
+    in_audio_level = static_cast<int8_t>(data[4]);
     asqint = (data[0] & (1u << 1)) ? true : false;
     overmod = (data[1] & (1u << 2)) ? true : false;
     in_audio_detect_high = (data[1] & (1u << 1)) ? true : false;

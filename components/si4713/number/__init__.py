@@ -1,7 +1,13 @@
 import esphome.codegen as cg
 from esphome.components import number
 import esphome.config_validation as cv
-from esphome.const import DEVICE_CLASS_EMPTY, DEVICE_CLASS_FREQUENCY, ENTITY_CATEGORY_CONFIG
+from esphome.const import (
+    DEVICE_CLASS_EMPTY,
+    DEVICE_CLASS_FREQUENCY,
+    DEVICE_CLASS_VOLTAGE,
+    ENTITY_CATEGORY_CONFIG,
+    UNIT_MILLIVOLT,
+)
 
 from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, Si4713Listener, si4713_ns
 
@@ -35,10 +41,10 @@ CONFIG_SCHEMA = cv.Schema(
         ).extend(cv.COMPONENT_SCHEMA),
         cv.Optional(CONF_MAX_LINE_LEVEL): number.number_schema(
             Si4713MaxLineLevelNumber,
-            unit_of_measurement="mVPK",  # TODO try to use a standard unit
-            device_class=DEVICE_CLASS_EMPTY,
+            device_class=DEVICE_CLASS_VOLTAGE,
+            unit_of_measurement=UNIT_MILLIVOLT,
             entity_category=ENTITY_CATEGORY_CONFIG,
-        ).extend(cv.COMPONENT_SCHEMA),
+        ),
     }
 )
 
