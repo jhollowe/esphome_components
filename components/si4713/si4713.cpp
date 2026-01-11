@@ -43,8 +43,9 @@ void Si4713Hub::setup() {
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
   ESP_LOGV(TAG, "Pulling initial property table");
-  this->get_prop_table(poperties_curr);
-  this->print_prop_table(poperties_curr);
+  this->get_prop_table(properties_curr_);
+  properties_next_ = properties_curr_;
+  this->print_prop_table(properties_curr_);
 
   // TODO remove all below
   // testing setup and hardcoded configuration
@@ -54,8 +55,9 @@ void Si4713Hub::setup() {
   // this->print_tune_status(this->get_tune_status());
 
   // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
-  this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL,
-                     0x1000 | 300);  // set line input level to 300 mVPK (attenuation setting 01 (max 301))
+  // this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL,
+  //                    0x1000 | 300);  // set line input level to 300 mVPK (attenuation setting 01 (max 301))
+  properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
   this->enabled_ = true;
   this->set_power(100);
   this->print_tune_status(this->get_tune_status());
@@ -95,22 +97,30 @@ void Si4713Hub::update() {
     }
   }
 
+  // DEBUG
   this->print_asq_status(asq_status_curr_);
   this->print_tune_status(tune_status_curr_);
 
   // iterate through next properties and notify listeners if the value is different from current
-  for (const auto &item : poperties_next) {
-    if (item.second != poperties_curr[item.first]) {
-      ESP_LOGI(TAG, "Property 0x%04X changed from 0x%04X to 0x%04X", item.first, poperties_curr[item.first],
+  for (const auto &item : properties_next_) {
+    if (item.second != properties_curr_[item.first]) {
+      ESP_LOGV(TAG, "Property 0x%04X changed from 0x%04x to 0x%04x", item.first, properties_curr_[item.first],
                item.second);
+      // set the new property value on the device
+      this->set_property_(item.first, item.second);
       // notify listeners of property change
       for (auto &listener : this->listeners_) {
         listener->on_property(item.first, item.second);
       }
       // update current property value
-      poperties_curr[item.first] = item.second;
+      properties_curr_[item.first] = item.second;
     }
   }
+
+  // DEBUG make sure the props are getting set correctly
+  // prop_table_t real_props = properties_curr_;
+  // this->get_prop_table(real_props);
+  // this->print_prop_table(real_props);
 }
 
 void Si4713Hub::toggle_reset_pin_() {
@@ -177,7 +187,7 @@ uint8_t Si4713Hub::wait_for_cts_() {
   return status;
 }
 
-void Si4713Hub::set_property(uint16_t property, uint16_t value) {
+void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
   // TODO this should update the properties_next table too
   //     or be protected
   uint8_t args[] = {
@@ -438,9 +448,9 @@ void Si4713Hub::print_tune_status(tune_status_t tunestatus) {
 }
 
 void Si4713Hub::print_prop_table(prop_table_t table) {
-  ESP_LOGI(TAG, "Si4713 Properties:");
+  ESP_LOGD(TAG, "Si4713 Properties:");
   for (const auto &item : table) {
-    ESP_LOGI(TAG, "  Property 0x%04X: 0x%04X", item.first, item.second);
+    ESP_LOGD(TAG, "  Property 0x%04x: 0x%04x", item.first, item.second);
   }
 }
 

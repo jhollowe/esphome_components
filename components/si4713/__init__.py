@@ -13,7 +13,7 @@ si4713_ns = cg.esphome_ns.namespace(DOMAIN)
 Si4713Hub = si4713_ns.class_("Si4713Hub", cg.Component, i2c.I2CDevice)
 Si4713Listener = si4713_ns.class_("Si4713Listener", cg.Parented.template(Si4713Hub))
 
-DEFAULT_POLLING_INTERVAL = "60s"
+DEFAULT_POLLING_INTERVAL = "10s"
 
 CONFIG_SCHEMA = (
     cv.COMPONENT_SCHEMA.extend(

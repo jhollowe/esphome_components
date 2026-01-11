@@ -23,11 +23,10 @@ class Si4713Listener : public Parented<Si4713Hub> {
 };
 
 /////////////////////////////////////////////////////////////////////
-// Main component class
+// Main Hub component class
 class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
  public:
-  // Interface functions
-  // float get_setup_priority() const override;
+  // Interface functions (PollingComponent)
   void setup() override;
   void dump_config() override;
   void update() override;
@@ -35,31 +34,35 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // Pin setters
   void set_reset_pin(GPIOPin *reset_pin) { this->reset_pin_ = reset_pin; }
 
-  // Common status retrival functions
+  // Common status retrieval functions
   rev_info_t get_info();
   asq_status_t get_asq_status(bool clear_flags = true);
   tune_status_t get_tune_status(bool clear_flags = true);
 
   // used by number components
+  // TODO can these be protected? maybe friend needed?
   void set_freq(uint16_t freq_khz);
   void set_power(uint8_t power);  // respects enabled_ flag
 
   // used by switch components
+  // TODO set the enabled switch as a field and use that to get/set state
   void set_enabled(bool enabled);
   bool get_enabled() const { return this->enabled_; }
 
   // used by various components
   // also public so lambda functions can access them
-  void set_property(uint16_t property, uint16_t value);
+  // TODO delete?
+  void set_property(uint16_t property, uint16_t value) { this->set_property_(property, value); };
   uint16_t get_property(uint16_t property);
 
   // unused by components but public for lambda use
+  // TODO all the RDS stuff needs finishing/cleanup
   void setup_rds(uint16_t programID, uint8_t pty = 0);
   void set_rds_ps(const char *s);
 
   // Listener management
   void register_listener(Si4713Listener *listener) { this->listeners_.push_back(listener); }
-  prop_table_t *get_properties_next() { return &(this->poperties_next); }
+  prop_table_t *get_properties_next() { return &(this->properties_next_); }
 
   // Print/Log functions
   void print_rev_info(const rev_info_t info);
@@ -69,9 +72,6 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_prop_table(prop_table_t);
 
  protected:
-  // Let Listeners access protected members
-  friend class Si4713Listener;
-
   // Low-level hardware control functions
   void toggle_reset_pin_();
   void power_up_();
@@ -79,13 +79,19 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
   void get_prop_table(prop_table_t &table);
+  void set_property_(uint16_t property, uint16_t value);
   // set_changed_properties(prop_table_t &current, prop_table_t &next);
 
   // TODO remove if unused
   void measure_freq(uint16_t freq_khz);
 
+  // Pin definitions
   GPIOPin *reset_pin_;
 
+  // child components
+  // TODO
+
+  // TODO remove and make set_power use the corresponding sensors for state
   bool enabled_;
   uint8_t power_;
 
@@ -97,13 +103,13 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   asq_status_t asq_status_last_;
   asq_status_t asq_status_curr_;
 
-  prop_table_t poperties_curr = {
+  prop_table_t properties_curr_ = {
       {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},
       {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   {SI4713_PROP_TX_RDS_PI, 0},
       {SI4713_PROP_TX_RDS_PS_MIX, 0},        {SI4713_PROP_TX_RDS_PS_MISC, 0},
       {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
   };
-  prop_table_t poperties_next;
+  prop_table_t properties_next_;
 };
 
 }  // namespace si4713

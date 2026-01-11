@@ -54,7 +54,7 @@ void Si4713PowerNumber::setup() {
 void Si4713MaxLineLevelNumber::control(float value) {
   if (parent_ != nullptr) {
     uint16_t level = (static_cast<uint16_t>(value)) & 0x3FF;  // only fits into bits 0-9
-    ESP_LOGI(N_TAG, "Setting Line Input Level to %u mVPK", level);
+    ESP_LOGV(N_TAG, "[control]Setting Line Input Level to %u mVPK", level);
 
     // Line Attenuation (bits 12-13):
     // 00 = Max input level = 190 mVPK; input resistance = 396 kOhm
@@ -69,17 +69,16 @@ void Si4713MaxLineLevelNumber::control(float value) {
     } else if (level <= 636) {
       attenuation = 0b11;
     }
-    // use get_properties_next() from parent_ to get the next property table
-    prop_table_t *props_next = parent_->get_properties_next();
     // set the new value in the next properties table
-    (*props_next)[SI4713_PROP_TX_LINE_INPUT_LEVEL] = (attenuation << 12) | level;
+    (*(parent_->get_properties_next()))[SI4713_PROP_TX_LINE_INPUT_LEVEL] = (attenuation << 12) | level;
+    // TODO should this lie and immediately publish state?
   }
 }
 
 void Si4713MaxLineLevelNumber::on_property(uint16_t property, uint16_t value) {
   if (property == SI4713_PROP_TX_LINE_INPUT_LEVEL) {
     uint16_t level = value & 0x3FF;  // bits 0-9 are the level
-    ESP_LOGI(N_TAG, "Line Input Level property changed to %u mVPK", level);
+    ESP_LOGV(N_TAG, "[on_property]Line Input Level property changed to %u mVPK", level);
     this->publish_state(level);
   }
 }
