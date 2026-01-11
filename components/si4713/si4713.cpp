@@ -6,6 +6,15 @@
 namespace esphome {
 namespace si4713 {
 
+// used to detect if a struct has changed
+static uint8_t calc_checksum(void *data, size_t size) {
+  uint8_t checksum = 0;
+  uint8_t *data_bytes = (uint8_t *) data;
+  for (size_t i = 0; i < size; i++) {
+    checksum ^= data_bytes[i];  // XOR operation
+  }
+  return checksum;
+}
 // TODO see if this can support multiple devices (up to 2 since there are only 2 I2C addresses)
 
 void Si4713Hub::dump_config() {
@@ -28,8 +37,8 @@ void Si4713Hub::setup() {
   }
 
   // pull initial data to current state variables
-  tune_status_curr_ = this->get_tune_status(false);
-  asq_status_curr_ = this->get_asq_status(false);
+  tune_status_curr_ = this->get_tune_status(true);
+  asq_status_curr_ = this->get_asq_status(true);
   this->get_prop_table(poperties_curr);
   this->print_prop_table(poperties_curr);
 
@@ -57,12 +66,47 @@ void Si4713Hub::setup() {
 }
 
 void Si4713Hub::update() {
-  // TODO remove debug print of dynamic statuses
-  tune_status_t ts = this->get_tune_status();
-  this->print_tune_status(ts);
+  tune_status_last_ = tune_status_curr_;
+  asq_status_last_ = asq_status_curr_;
 
-  asq_status_t asq = this->get_asq_status(1);
-  this->print_asq_status(asq);
+  tune_status_curr_ = this->get_tune_status(true);
+  asq_status_curr_ = this->get_asq_status(true);
+
+  // TODO is this less efficient than always sending the
+  //      status to the listener and letting it do a diff check?
+  if (calc_checksum(&tune_status_last_, sizeof(tune_status_t)) !=
+      calc_checksum(&tune_status_curr_, sizeof(tune_status_t))) {
+    // notify listeners of tune status change
+    ESP_LOGV(TAG, "notifying listeners of tune status change");
+    for (auto &listener : this->listeners_) {
+      listener->on_tune_status(tune_status_curr_);
+    }
+  }
+  if (calc_checksum(&asq_status_last_, sizeof(asq_status_t)) !=
+      calc_checksum(&asq_status_curr_, sizeof(asq_status_t))) {
+    // notify listeners of ASQ status change
+    ESP_LOGV(TAG, "notifying listeners of ASQ status change");
+    for (auto &listener : this->listeners_) {
+      listener->on_asq_status(asq_status_curr_);
+    }
+  }
+
+  this->print_asq_status(asq_status_curr_);
+  this->print_tune_status(tune_status_curr_);
+
+  // iterate through next properties and notify listeners if the value is different from current
+  for (const auto &item : poperties_next) {
+    if (item.second != poperties_curr[item.first]) {
+      ESP_LOGI(TAG, "Property 0x%04X changed from 0x%04X to 0x%04X", item.first, poperties_curr[item.first],
+               item.second);
+      // notify listeners of property change
+      for (auto &listener : this->listeners_) {
+        listener->on_property(item.first, item.second);
+      }
+      // update current property value
+      poperties_curr[item.first] = item.second;
+    }
+  }
 }
 
 void Si4713Hub::toggle_reset_pin_() {
@@ -120,6 +164,7 @@ uint8_t Si4713Hub::wait_for_cts_() {
   do {
     ESP_LOGV(TAG, "Checking for CTS...");
     this->read_register(0x00, &status, 1);
+    // TODO should this use SI4710_CMD_GET_INT_STATUS to get the status?
     max_attempts--;
   } while ((status & SI4710_STATUS_CTS) == 0 && max_attempts > 0);
   if (max_attempts == 0) {
@@ -129,6 +174,8 @@ uint8_t Si4713Hub::wait_for_cts_() {
 }
 
 void Si4713Hub::set_property(uint16_t property, uint16_t value) {
+  // TODO this should update the properties_next table too
+  //     or be protected
   uint8_t args[] = {
       0,  // must always be 0
       static_cast<uint8_t>(property >> 8),
@@ -142,6 +189,8 @@ void Si4713Hub::set_property(uint16_t property, uint16_t value) {
 }
 
 uint16_t Si4713Hub::get_property(uint16_t property) {
+  // TODO this should update the properties_next table while we are already pulling the data
+  //     or be protected
   uint8_t args[] = {
       SI4710_CMD_GET_PROPERTY,
       0,  // must always be 0

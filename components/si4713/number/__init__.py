@@ -3,16 +3,20 @@ from esphome.components import number
 import esphome.config_validation as cv
 from esphome.const import DEVICE_CLASS_EMPTY, DEVICE_CLASS_FREQUENCY, ENTITY_CATEGORY_CONFIG
 
-from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, si4713_ns
+from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, Si4713Listener, si4713_ns
 
 DEPENDENCIES = [DOMAIN]
 
 common_classes = [number.Number, cg.Parented.template(Si4713Hub)]
 Si4713FrequencyNumber = si4713_ns.class_("Si4713FrequencyNumber", *common_classes, cg.Component)
 Si4713PowerNumber = si4713_ns.class_("Si4713PowerNumber", *common_classes, cg.Component)
+Si4713MaxLineLevelNumber = si4713_ns.class_(
+    "Si4713MaxLineLevelNumber", *common_classes, Si4713Listener
+)
 
 CONF_FREQUENCY = "frequency"
 CONF_POWER = "power_level"
+CONF_MAX_LINE_LEVEL = "max_line_level"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -26,6 +30,12 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_POWER): number.number_schema(
             Si4713PowerNumber,
             unit_of_measurement="dBµV",  # TODO try to use a standard unit (UNIT_DECIBEL_MILLIWATT?)
+            device_class=DEVICE_CLASS_EMPTY,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ).extend(cv.COMPONENT_SCHEMA),
+        cv.Optional(CONF_MAX_LINE_LEVEL): number.number_schema(
+            Si4713MaxLineLevelNumber,
+            unit_of_measurement="mVPK",  # TODO try to use a standard unit
             device_class=DEVICE_CLASS_EMPTY,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ).extend(cv.COMPONENT_SCHEMA),
@@ -54,3 +64,14 @@ async def to_code(config):
         )
         await cg.register_component(power_num, config)
         cg.add(power_num.set_parent(paren))
+
+    if max_line_cfg := config.get(CONF_MAX_LINE_LEVEL):
+        max_line_num = await number.new_number(
+            max_line_cfg,
+            min_value=max_line_cfg.get("min_value", 0),
+            max_value=max_line_cfg.get("max_value", 636),
+            step=max_line_cfg.get("step", 1.0),
+        )
+        # await cg.register_component(max_line_num, config)
+        cg.add(max_line_num.set_parent(paren))
+        cg.add(paren.register_listener(max_line_num))

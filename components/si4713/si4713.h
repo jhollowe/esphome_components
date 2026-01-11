@@ -12,7 +12,18 @@ namespace si4713 {
 
 static const char *const TAG = "si4713";
 
-// class Si4713Hub : public Component, public i2c::I2CDevice {
+//////////////////////////////////////////////////////////////////////
+// Interface classes.
+class Si4713Hub;  // forward declaration
+class Si4713Listener : public Parented<Si4713Hub> {
+ public:
+  virtual void on_tune_status(tune_status_t status){};
+  virtual void on_asq_status(asq_status_t status){};
+  virtual void on_property(uint16_t reg, uint16_t value){};
+};
+
+/////////////////////////////////////////////////////////////////////
+// Main component class
 class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
  public:
   // Interface functions
@@ -46,6 +57,10 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void setup_rds(uint16_t programID, uint8_t pty = 0);
   void set_rds_ps(const char *s);
 
+  // Listener management
+  void register_listener(Si4713Listener *listener) { this->listeners_.push_back(listener); }
+  prop_table_t *get_properties_next() { return &(this->poperties_next); }
+
   // Print/Log functions
   void print_rev_info(const rev_info_t info);
   void print_status(uint8_t status);
@@ -54,6 +69,10 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_prop_table(prop_table_t);
 
  protected:
+  // Let Listeners access protected members
+  friend class Si4713Listener;
+
+  // Low-level hardware control functions
   void toggle_reset_pin_();
   void power_up_();
   void power_down_();
@@ -70,11 +89,13 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   bool enabled_;
   uint8_t power_;
 
+  std::vector<Si4713Listener *> listeners_{};
+
   // STATE MANAGEMENT
+  tune_status_t tune_status_last_;
   tune_status_t tune_status_curr_;
-  tune_status_t tune_status_next_;
+  asq_status_t asq_status_last_;
   asq_status_t asq_status_curr_;
-  asq_status_t asq_status_next_;
 
   prop_table_t poperties_curr = {
       {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},

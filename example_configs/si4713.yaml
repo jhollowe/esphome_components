@@ -67,6 +67,9 @@ number:
     power_level:
       name: "${friendly_name} Power"
       id: tx_power
+    max_line_level:
+      name: "${friendly_name} Max Line Input Level"
+      id: tx_max_line_level
 
 
 switch:

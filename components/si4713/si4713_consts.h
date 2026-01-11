@@ -60,10 +60,10 @@ namespace si4713 {
           ///< 10 Hz increments. Default is 2 kHz.
 #define SI4713_PROP_TX_LINE_INPUT_LEVEL \
   0x2104  ///< Configures maximum analog line input level to the LIN/RIN pins to
-          ///< reach the maximum deviation level pro- grammed into the audio
+          ///< reach the maximum deviation level programmed into the audio
           ///< deviation property TX Audio Deviation. Default is 636 mVPK.
 #define SI4713_PROP_TX_LINE_INPUT_MUTE \
-  0x2105                                   ///< Sets line input mute. L and R inputs may be indepen- dently
+  0x2105                                   ///< Sets line input mute. L and R inputs may be independently
                                            ///< muted. Default is not muted.
 #define SI4713_PROP_TX_PREEMPHASIS 0x2106  ///< Configures pre-emphasis time constant. Default is 0 (75 μS).
 #define SI4713_PROP_TX_PILOT_FREQUENCY \
@@ -82,7 +82,7 @@ namespace si4713 {
 #define SI4713_PROP_TX_ACOMP_GAIN 0x2204  ///< Sets the gain for audio dynamic range control. Default is 15 dB.
 #define SI4713_PROP_TX_LIMITER_RELEASE_TIME 0x2205  ///< Sets the limiter release time. Default is 102 (5.01 ms)
 #define SI4713_PROP_TX_ASQ_INTERRUPT_SOURCE \
-  0x2300  ///< Configures measurements related to signal quality met- rics.
+  0x2300  ///< Configures measurements related to signal quality metrics.
           ///< Default is none selected.
 #define SI4713_PROP_TX_ASQ_LEVEL_LOW \
   0x2301  ///< Configures low audio input level detection threshold. This
@@ -102,10 +102,10 @@ namespace si4713 {
 #define SI4713_PROP_TX_RDS_PS_MISC 0x2C03           ///< Miscellaneous bits to transmit along with RDS_PS Groups.
 #define SI4713_PROP_TX_RDS_PS_REPEAT_COUNT \
   0x2C04                                         ///< Number of times to repeat transmission of a PS message before
-                                                 ///< transmitting the next PS mes- sage.
+                                                 ///< transmitting the next PS message.
 #define SI4713_PROP_TX_RDS_MESSAGE_COUNT 0x2C05  ///< Number of PS messages in use.
 #define SI4713_PROP_TX_RDS_PS_AF \
-  0x2C06  ///< RDS Program Service Alternate Fre- quency. This provides the
+  0x2C06  ///< RDS Program Service Alternate Frequency. This provides the
           ///< ability to inform the receiver of a single alternate frequency
           ///< using AF Method A coding and is transmitted along with the RDS_PS
           ///< Groups.
