@@ -5,5 +5,12 @@
     "**/.vs": true
   },
   "C_Cpp.clang_format_fallbackStyle": "none",
-  "C_Cpp.errorSquiggles": "disabled"
+  "C_Cpp.errorSquiggles": "disabled",
+  "C_Cpp.autoAddFileAssociations": true,
+  "files.associations": {
+    "**/.vscode/*.json": "jsonc",
+    "**/example_configs/*.yaml": "esphome",
+    "chrono": "cpp"
+  },
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true
 }
