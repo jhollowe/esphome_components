@@ -103,18 +103,17 @@ void Si4713Hub::update() {
   this->print_tune_status(tune_status_curr_);
 
   // iterate through next properties and notify listeners if the value is different from current
-  for (const auto &item : properties_next_) {
-    if (item.second != properties_curr_[item.first]) {
-      ESP_LOGV(TAG, "Property 0x%04X changed from 0x%04x to 0x%04x", item.first, properties_curr_[item.first],
-               item.second);
+  for (const auto &[prop, val] : properties_next_) {
+    if (val != properties_curr_[prop]) {
+      ESP_LOGV(TAG, "Property 0x%04X changed from 0x%04x to 0x%04x", prop, properties_curr_[prop], val);
       // set the new property value on the device
-      this->set_property_(item.first, item.second);
+      this->set_property_(prop, val);
       // notify listeners of property change
       for (auto &listener : this->listeners_) {
-        listener->on_property(item.first, item.second);
+        listener->on_property(prop, val);
       }
       // update current property value
-      properties_curr_[item.first] = item.second;
+      properties_curr_[prop] = val;
     }
   }
 
@@ -246,8 +245,8 @@ asq_status_t Si4713Hub::get_asq_status(bool clear_flags) {
 
 void Si4713Hub::get_prop_table(prop_table_t &table) {
   // read all tracked properties in the table and update their values
-  for (auto &item : table) {
-    item.second = this->get_property(item.first);
+  for (auto &[prop, val] : table) {
+    val = this->get_property(prop);
   }
 }
 
@@ -450,8 +449,8 @@ void Si4713Hub::print_tune_status(const tune_status_t &tunestatus) {
 
 void Si4713Hub::print_prop_table(const prop_table_t &table) {
   ESP_LOGD(TAG, "Si4713 Properties:");
-  for (const auto &item : table) {
-    ESP_LOGD(TAG, "  Property 0x%04x: 0x%04x", item.first, item.second);
+  for (const auto &[prop, val] : table) {
+    ESP_LOGD(TAG, "  Property 0x%04x: 0x%04x", prop, val);
   }
 }
 
