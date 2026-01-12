@@ -83,3 +83,9 @@ switch:
       name: "${friendly_name} Enable Transmit"
       id: tx_enable
       restore_mode: RESTORE_DEFAULT_ON
+    mute_left:
+      name: "${friendly_name} Mute Left Channel"
+      id: tx_mute_left
+    mute_right:
+      name: "${friendly_name} Mute Right Channel"
+      id: tx_mute_right
