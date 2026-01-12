@@ -56,9 +56,11 @@ void Si4713Hub::setup() {
   // this->print_tune_status(this->get_tune_status());
 
   // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
-  // this->set_property(SI4713_PROP_TX_LINE_INPUT_LEVEL,
-  //                    0x1000 | 300);  // set line input level to 300 mVPK (attenuation setting 01 (max 301))
+
   properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
+  properties_next_[SI4713_PROP_TX_ASQ_LEVEL_LOW] = 0xff & static_cast<int8_t>(-40);  // -40 db (8bit 2's complement)
+  properties_next_[SI4713_PROP_TX_ASQ_DURATION_LOW] = 30;                            // 30ms
+
   this->enabled_ = true;
   this->set_power(100);
   this->print_tune_status(this->get_tune_status());

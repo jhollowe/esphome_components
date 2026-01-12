@@ -53,8 +53,7 @@ void Si4713PowerNumber::setup() {
 
 void Si4713MaxLineLevelNumber::control(float value) {
   if (parent_ != nullptr) {
-    uint16_t level = (static_cast<uint16_t>(value)) & 0x3FF;                 // only fits into bits 0-9
-    ESP_LOGV(N_TAG, "[control]Setting Line Input Level to %u mVPK", level);  // DEBUG
+    uint16_t level = (static_cast<uint16_t>(value)) & 0x3FF;  // only fits into bits 0-9
 
     // Line Attenuation (bits 12-13):
     // 00 = Max input level = 190 mVPK; input resistance = 396 kOhm
@@ -77,8 +76,7 @@ void Si4713MaxLineLevelNumber::control(float value) {
 
 void Si4713MaxLineLevelNumber::on_property(uint16_t property, uint16_t value) {
   if (property == SI4713_PROP_TX_LINE_INPUT_LEVEL) {
-    uint16_t level = value & 0x3FF;                                                       // bits 0-9 are the level
-    ESP_LOGV(N_TAG, "[on_property]Line Input Level property changed to %u mVPK", level);  // DEBUG
+    uint16_t level = value & 0x3FF;  // bits 0-9 are the level
     this->publish_state(level);
   }
 }

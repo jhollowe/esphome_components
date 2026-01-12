@@ -104,10 +104,16 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   asq_status_t asq_status_curr_;
 
   prop_table_t properties_curr_ = {
-      {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},
-      {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   {SI4713_PROP_TX_RDS_PI, 0},
-      {SI4713_PROP_TX_RDS_PS_MIX, 0},        {SI4713_PROP_TX_RDS_PS_MISC, 0},
-      {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
+      {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},  // Si4713MaxLineLevelNumber
+      {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   // Si4713ChannelMuteSwitch
+      {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  // TODO
+      {SI4713_PROP_TX_ASQ_LEVEL_LOW, 0},     // TODO
+      {SI4713_PROP_TX_ASQ_DURATION_LOW, 0},  // TODO
+
+      // {SI4713_PROP_TX_RDS_PI, 0},
+      // {SI4713_PROP_TX_RDS_PS_MIX, 0},
+      // {SI4713_PROP_TX_RDS_PS_MISC, 0},
+      // {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
   };
   prop_table_t properties_next_;
 };
