@@ -42,6 +42,7 @@ void Si4713Hub::setup() {
   asq_status_curr_ = this->get_asq_status(true);
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
+  this->print_prop_table(properties_curr_);
   ESP_LOGV(TAG, "Pulling initial property table");
   this->get_prop_table(properties_curr_);
   properties_next_ = properties_curr_;
@@ -373,7 +374,7 @@ void Si4713Hub::set_rds_ps(const char *ps) {
   // TODO set X_RDS_PS_MESSAGE_COUNT
 }
 
-void Si4713Hub::print_rev_info(rev_info_t info) {
+void Si4713Hub::print_rev_info(const rev_info_t &info) {
   // clang-format off
     ESP_LOGI(TAG,
       "HW Revision Info:\n"
@@ -409,7 +410,7 @@ void Si4713Hub::print_status(uint8_t status) {
   // clang-format on
 }
 
-void Si4713Hub::print_asq_status(asq_status_t asq) {
+void Si4713Hub::print_asq_status(const asq_status_t &asq) {
   // clang-format off
     ESP_LOGD(TAG,
       "ASQ Status:\n"
@@ -430,7 +431,7 @@ void Si4713Hub::print_asq_status(asq_status_t asq) {
   // clang-format on
 }
 
-void Si4713Hub::print_tune_status(tune_status_t tunestatus) {
+void Si4713Hub::print_tune_status(const tune_status_t &tunestatus) {
   // clang-format off
     ESP_LOGD(TAG,
       "Tune Status:\n"
@@ -447,7 +448,7 @@ void Si4713Hub::print_tune_status(tune_status_t tunestatus) {
   // clang-format on
 }
 
-void Si4713Hub::print_prop_table(prop_table_t table) {
+void Si4713Hub::print_prop_table(const prop_table_t &table) {
   ESP_LOGD(TAG, "Si4713 Properties:");
   for (const auto &item : table) {
     ESP_LOGD(TAG, "  Property 0x%04x: 0x%04x", item.first, item.second);

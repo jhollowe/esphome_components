@@ -17,9 +17,9 @@ static const char *const TAG = "si4713";
 class Si4713Hub;  // forward declaration
 class Si4713Listener : public Parented<Si4713Hub> {
  public:
-  virtual void on_tune_status(tune_status_t status){};
-  virtual void on_asq_status(asq_status_t status){};
-  virtual void on_property(uint16_t reg, uint16_t value){};
+  virtual void on_tune_status(const tune_status_t &status){};
+  virtual void on_asq_status(const asq_status_t &status){};
+  virtual void on_property(const uint16_t reg, const uint16_t value){};
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -65,11 +65,11 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   prop_table_t *get_properties_next() { return &(this->properties_next_); }
 
   // Print/Log functions
-  void print_rev_info(const rev_info_t info);
   void print_status(uint8_t status);
-  void print_asq_status(asq_status_t asq);
-  void print_tune_status(tune_status_t tunestatus);
-  void print_prop_table(prop_table_t);
+  void print_rev_info(const rev_info_t &info);
+  void print_asq_status(const asq_status_t &asq);
+  void print_tune_status(const tune_status_t &tunestatus);
+  void print_prop_table(const prop_table_t &table);
 
  protected:
   // Low-level hardware control functions
