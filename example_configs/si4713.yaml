@@ -75,6 +75,12 @@ number:
     max_line_level:
       name: "${friendly_name} Max Line Input Level"
       id: tx_max_line_level
+    low_threshold:
+      name: "${friendly_name} Audio Low Threshold"
+      id: tx_asq_low_threshold
+    high_threshold:
+      name: "${friendly_name} Audio High Threshold"
+      id: tx_asq_high_threshold
 
 binary_sensor:
   - platform: si4713

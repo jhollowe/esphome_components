@@ -81,5 +81,24 @@ void Si4713MaxLineLevelNumber::on_property(uint16_t property, uint16_t value) {
   }
 }
 
+void Si4713LevelThresholdNumber::control(float value) {
+  if (parent_ != nullptr) {
+    int8_t level = static_cast<int8_t>(value);
+    // set the new value in the next properties table
+    (*(parent_->get_properties_next()))[this->is_low_thresh_ ? SI4713_PROP_TX_ASQ_LEVEL_LOW
+                                                             : SI4713_PROP_TX_AQS_LEVEL_HIGH] =
+        0xFF & level;  // set as 8bit 2's complement
+  }
+}
+
+void Si4713LevelThresholdNumber::on_property(uint16_t property, uint16_t value) {
+  if ((this->is_low_thresh_ && property == SI4713_PROP_TX_ASQ_LEVEL_LOW) ||
+      (!this->is_low_thresh_ && property == SI4713_PROP_TX_AQS_LEVEL_HIGH)) {
+    // interpret as signed 8bit
+    int8_t level = static_cast<int8_t>(value & 0xFF);
+    this->publish_state(static_cast<float>(level));
+  }
+}
+
 }  // namespace si4713
 }  // namespace esphome

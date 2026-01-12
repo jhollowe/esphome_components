@@ -34,5 +34,18 @@ class Si4713MaxLineLevelNumber : public Si4713BaseNumber, public Si4713Listener 
   void on_property(uint16_t reg, uint16_t value) override;
 };
 
+class Si4713LevelThresholdNumber : public Si4713BaseNumber, public Si4713Listener {
+ public:
+  void set_is_low_thresh(bool is_low) { this->is_low_thresh_ = is_low; }
+  bool get_is_low_thresh() const { return this->is_low_thresh_; }
+  // overrides from interface (Number)
+  void control(float value) override;
+  // overrides from interface (Si4713Listener)
+  void on_property(uint16_t reg, uint16_t value) override;
+
+ private:
+  bool is_low_thresh_;
+};
+
 }  // namespace si4713
 }  // namespace esphome

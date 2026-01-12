@@ -4,8 +4,10 @@ import esphome.config_validation as cv
 from esphome.const import (
     DEVICE_CLASS_EMPTY,
     DEVICE_CLASS_FREQUENCY,
+    DEVICE_CLASS_SOUND_PRESSURE,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_CONFIG,
+    UNIT_DECIBEL,
     UNIT_MILLIVOLT,
 )
 
@@ -19,10 +21,17 @@ Si4713PowerNumber = si4713_ns.class_("Si4713PowerNumber", *common_classes, cg.Co
 Si4713MaxLineLevelNumber = si4713_ns.class_(
     "Si4713MaxLineLevelNumber", *common_classes, Si4713Listener
 )
+Si4713LevelThresholdNumber = si4713_ns.class_(
+    "Si4713LevelThresholdNumber", *common_classes, Si4713Listener
+)
 
 CONF_FREQUENCY = "frequency"
 CONF_POWER = "power_level"
 CONF_MAX_LINE_LEVEL = "max_line_level"
+CONF_LOW_THRESH = "low_threshold"
+CONF_HIGH_THRESH = "high_threshold"
+
+THRESHOLD_BOUNDS = (-70, 0)
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -43,6 +52,18 @@ CONFIG_SCHEMA = cv.Schema(
             Si4713MaxLineLevelNumber,
             device_class=DEVICE_CLASS_VOLTAGE,
             unit_of_measurement=UNIT_MILLIVOLT,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        cv.Optional(CONF_LOW_THRESH): number.number_schema(
+            Si4713LevelThresholdNumber,
+            device_class=DEVICE_CLASS_SOUND_PRESSURE,
+            unit_of_measurement=UNIT_DECIBEL,
+            entity_category=ENTITY_CATEGORY_CONFIG,
+        ),
+        cv.Optional(CONF_HIGH_THRESH): number.number_schema(
+            Si4713LevelThresholdNumber,
+            device_class=DEVICE_CLASS_SOUND_PRESSURE,
+            unit_of_measurement=UNIT_DECIBEL,
             entity_category=ENTITY_CATEGORY_CONFIG,
         ),
     }
@@ -81,3 +102,25 @@ async def to_code(config):
         # await cg.register_component(max_line_num, config)
         cg.add(max_line_num.set_parent(paren))
         cg.add(paren.register_listener(max_line_num))
+
+    if low_thresh_cfg := config.get(CONF_LOW_THRESH):
+        low_thresh_num = await number.new_number(
+            low_thresh_cfg,
+            min_value=THRESHOLD_BOUNDS[0],
+            max_value=THRESHOLD_BOUNDS[1],
+            step=low_thresh_cfg.get("step", 1.0),
+        )
+        cg.add(low_thresh_num.set_parent(paren))
+        cg.add(low_thresh_num.set_is_low_thresh(True))
+        cg.add(paren.register_listener(low_thresh_num))
+
+    if high_thresh_cfg := config.get(CONF_HIGH_THRESH):
+        high_thresh_num = await number.new_number(
+            high_thresh_cfg,
+            min_value=THRESHOLD_BOUNDS[0],
+            max_value=THRESHOLD_BOUNDS[1],
+            step=high_thresh_cfg.get("step", 1.0),
+        )
+        cg.add(high_thresh_num.set_parent(paren))
+        cg.add(high_thresh_num.set_is_low_thresh(False))
+        cg.add(paren.register_listener(high_thresh_num))
