@@ -76,6 +76,17 @@ number:
       name: "${friendly_name} Max Line Input Level"
       id: tx_max_line_level
 
+binary_sensor:
+  - platform: si4713
+    overmodulation:
+      name: "${friendly_name} Overmodulation"
+      id: tx_overmod
+    audio_low:
+      name: "${friendly_name} Audio Low"
+      id: tx_audio_low
+    audio_high:
+      name: "${friendly_name} Audio High"
+      id: tx_audio_high
 
 switch:
   - platform: si4713
