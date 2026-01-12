@@ -47,9 +47,8 @@ async def to_code(config):
     paren = await cg.get_variable(config[CONF_SI4713_ID])
     if enable_tx_cfg := config.get(CONF_ENABLE_TX):
         enable_tx_switch = await switch.new_switch(enable_tx_cfg)
-        # await cg.register_component(enable_tx_switch, config)
         cg.add(enable_tx_switch.set_parent(paren))
-        # cg.add(paren.set_enabled_switch(enable_tx_switch))
+        cg.add(paren.set_enabled_switch(enable_tx_switch))
 
     if mute_left_cfg := config.get(CONF_MUTE_LEFT):
         mute_left_switch = await switch.new_switch(mute_left_cfg)

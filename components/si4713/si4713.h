@@ -7,6 +7,22 @@
 #include "si4713_consts.h"
 #include "si4713_structs.h"
 
+#ifdef USE_TEXT_SENSOR
+#include "esphome/components/text_sensor/text_sensor.h"
+#endif
+#ifdef USE_SELECT
+#include "esphome/components/select/select.h"
+#endif
+#ifdef USE_NUMBER
+#include "esphome/components/number/number.h"
+#endif
+#ifdef USE_BUTTON
+#include "esphome/components/button/button.h"
+#endif
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
+
 namespace esphome {
 namespace si4713 {
 
@@ -71,6 +87,18 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_tune_status(const tune_status_t &tunestatus);
   void print_prop_table(const prop_table_t &table);
 
+#ifdef USE_BUTTON
+  void set_reset_button(button::Button *button) { this->reset_button_ = button; }
+#endif  // USE_BUTTON
+#ifdef USE_NUMBER
+  void set_freq_number(number::Number *number) { this->freq_number_ = number; }
+  void set_power_number(number::Number *number) { this->power_number_ = number; }
+  void set_max_line_level_number(number::Number *number) { this->max_line_level_number_ = number; }
+#endif  // USE_NUMBER
+#ifdef USE_SWITCH
+  void set_enabled_switch(switch_::Switch *sw) { this->enabled_switch_ = sw; }
+#endif  // USE_SWITCH
+
  protected:
   // Low-level hardware control functions
   void toggle_reset_pin_();
@@ -88,6 +116,18 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // Pin definitions
   GPIOPin *reset_pin_;
 
+#ifdef USE_BUTTON
+  button::Button *reset_button_{nullptr};
+#endif  // USE_BUTTON
+#ifdef USE_NUMBER
+  number::Number *freq_number_{nullptr};
+  number::Number *power_number_{nullptr};
+  number::Number *max_line_level_number_{nullptr};
+#endif  // USE_NUMBER
+#ifdef USE_SWITCH
+  switch_::Switch *enabled_switch_{nullptr};
+#endif  // USE_SWITCH
+
   // child components
   // TODO
 
@@ -104,10 +144,15 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   asq_status_t asq_status_curr_;
 
   prop_table_t properties_curr_ = {
-      {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},
-      {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   {SI4713_PROP_TX_RDS_PI, 0},
-      {SI4713_PROP_TX_RDS_PS_MIX, 0},        {SI4713_PROP_TX_RDS_PS_MISC, 0},
-      {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
+#ifdef USE_SWITCH
+      {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  // Si4713StereoSwitch, Si4713RdsSwitch
+#endif                                       // USE_SWITCH
+      {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},  // Si4713MaxLineLevelNumber
+
+      // {SI4713_PROP_TX_RDS_PI, 0},
+      // {SI4713_PROP_TX_RDS_PS_MIX, 0},
+      // {SI4713_PROP_TX_RDS_PS_MISC, 0},
+      // {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
   };
   prop_table_t properties_next_;
 };

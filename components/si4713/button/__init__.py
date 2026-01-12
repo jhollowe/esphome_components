@@ -29,3 +29,4 @@ async def to_code(config):
     if reset_cfg := config.get(CONST_RESET):
         reset_button = await button.new_button(reset_cfg)
         cg.add(reset_button.set_parent(paren))
+        cg.add(paren.set_reset_button(reset_button))

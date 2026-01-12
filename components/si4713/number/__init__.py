@@ -60,6 +60,7 @@ async def to_code(config):
         )
         await cg.register_component(freq_num, config)
         cg.add(freq_num.set_parent(paren))
+        cg.add(paren.set_freq_number(freq_num))
 
     if power_cfg := config.get(CONF_POWER):
         power_num = await number.new_number(
@@ -70,6 +71,7 @@ async def to_code(config):
         )
         await cg.register_component(power_num, config)
         cg.add(power_num.set_parent(paren))
+        cg.add(paren.set_power_number(power_num))
 
     if max_line_cfg := config.get(CONF_MAX_LINE_LEVEL):
         max_line_num = await number.new_number(
@@ -78,6 +80,6 @@ async def to_code(config):
             max_value=max_line_cfg.get("max_value", 636),
             step=max_line_cfg.get("step", 1.0),
         )
-        # await cg.register_component(max_line_num, config)
         cg.add(max_line_num.set_parent(paren))
         cg.add(paren.register_listener(max_line_num))
+        cg.add(paren.set_max_line_level_number(max_line_num))

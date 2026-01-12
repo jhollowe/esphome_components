@@ -21,6 +21,20 @@ void Si4713Hub::dump_config() {
   ESP_LOGCONFIG(TAG, "Si4713Hub");
   LOG_I2C_DEVICE(this);
   LOG_PIN("  Reset Pin: ", this->reset_pin_);
+#ifdef USE_BUTTON
+  ESP_LOGCONFIG(TAG, "Button:");
+  LOG_BUTTON("", "Reset Button", this->reset_button_);
+#endif  // USE_BUTTON
+#ifdef USE_NUMBER
+  ESP_LOGCONFIG(TAG, "Number:");
+  LOG_NUMBER("", "Frequency Number", this->freq_number_);
+  LOG_NUMBER("", "Power Number", this->power_number_);
+  LOG_NUMBER("", "Max Line Level Number", this->max_line_level_number_);
+#endif  // USE_NUMBER
+#ifdef USE_SWITCH
+  ESP_LOGCONFIG(TAG, "Switch:");
+  LOG_SWITCH("", "Enabled Switch", this->enabled_switch_);
+#endif  // USE_SWITCH
 }
 
 void Si4713Hub::setup() {
