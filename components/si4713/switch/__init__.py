@@ -12,12 +12,12 @@ Si4713EnableSwitch = si4713_ns.class_("Si4713EnableSwitch", *common_classes)
 Si4713ChannelMuteSwitch = si4713_ns.class_(
     "Si4713ChannelMuteSwitch", *common_classes, Si4713Listener
 )
-# Si4713StereoSwitch = si4713_ns.class_("Si4713StereoSwitch", *common_classes, cg.Component)
-# Si4713RDSSwitch = si4713_ns.class_("Si4713RDSSwitch", *common_classes, cg.Component)
+Si4713ComponentSwitch = si4713_ns.class_("Si4713ComponentSwitch", *common_classes, Si4713Listener)
 
 CONF_ENABLE_TX = "enable_tx"
 CONF_ENABLE_STEREO = "enable_stereo"
 CONF_ENABLE_RDS = "enable_rds"
+CONF_ENABLE_PILOT = "enable_pilot"
 CONF_MUTE_LEFT = "mute_left"
 CONF_MUTE_RIGHT = "mute_right"
 
@@ -33,12 +33,15 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_MUTE_RIGHT): switch.switch_schema(
             Si4713ChannelMuteSwitch, device_class=DEVICE_CLASS_SWITCH
         ),
-        # cv.Optional(CONF_ENABLE_STEREO): switch.switch_schema(
-        #     Si4713StereoSwitch, device_class=DEVICE_CLASS_SWITCH
-        # ),
-        # cv.Optional(CONF_ENABLE_RDS): switch.switch_schema(
-        #     Si4713RDSSwitch, device_class=DEVICE_CLASS_SWITCH
-        # ),
+        cv.Optional(CONF_ENABLE_PILOT): switch.switch_schema(
+            Si4713ComponentSwitch, device_class=DEVICE_CLASS_SWITCH
+        ),
+        cv.Optional(CONF_ENABLE_STEREO): switch.switch_schema(
+            Si4713ComponentSwitch, device_class=DEVICE_CLASS_SWITCH
+        ),
+        cv.Optional(CONF_ENABLE_RDS): switch.switch_schema(
+            Si4713ComponentSwitch, device_class=DEVICE_CLASS_SWITCH
+        ),
     }
 )
 
@@ -64,3 +67,24 @@ async def to_code(config):
         cg.add(mute_right_switch.set_is_left_channel(False))
         cg.add(paren.register_listener(mute_right_switch))
         # cg.add(paren.set_mute_right_switch(mute_right_switch))
+
+    if enable_pilot_cfg := config.get(CONF_ENABLE_PILOT):
+        enable_pilot_switch = await switch.new_switch(enable_pilot_cfg)
+        cg.add(enable_pilot_switch.set_parent(paren))
+        cg.add(enable_pilot_switch.set_bit_pos(0))
+        cg.add(paren.register_listener(enable_pilot_switch))
+        # cg.add(paren.set_enable_pilot_switch(enable_pilot_switch))
+
+    if enable_stereo_cfg := config.get(CONF_ENABLE_STEREO):
+        enable_stereo_switch = await switch.new_switch(enable_stereo_cfg)
+        cg.add(enable_stereo_switch.set_parent(paren))
+        cg.add(enable_stereo_switch.set_bit_pos(1))
+        cg.add(paren.register_listener(enable_stereo_switch))
+        # cg.add(paren.set_enable_stereo_switch(enable_stereo_switch))
+
+    if enable_rds_cfg := config.get(CONF_ENABLE_RDS):
+        enable_rds_switch = await switch.new_switch(enable_rds_cfg)
+        cg.add(enable_rds_switch.set_parent(paren))
+        cg.add(enable_rds_switch.set_bit_pos(2))
+        cg.add(paren.register_listener(enable_rds_switch))
+        # cg.add(paren.set_enable_rds_switch(enable_rds_switch))

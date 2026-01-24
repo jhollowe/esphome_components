@@ -106,3 +106,12 @@ switch:
     mute_right:
       name: "${friendly_name} Mute Right Channel"
       id: tx_mute_right
+    enable_pilot:
+      name: "${friendly_name} Enable Pilot Tone"
+      id: tx_enable_pilot
+    enable_stereo:
+      name: "${friendly_name} Enable Stereo"
+      id: tx_enable_stereo
+    enable_rds:
+      name: "${friendly_name} Enable RDS"
+      id: tx_enable_rds

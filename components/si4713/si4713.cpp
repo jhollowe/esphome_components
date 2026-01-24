@@ -60,6 +60,7 @@ void Si4713Hub::setup() {
   properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
   properties_next_[SI4713_PROP_TX_ASQ_LEVEL_LOW] = 0xff & static_cast<int8_t>(-40);  // -40 db (8bit 2's complement)
   properties_next_[SI4713_PROP_TX_ASQ_DURATION_LOW] = 30;                            // 30ms
+  properties_next_[SI4713_PROP_TX_COMPONENT_ENABLE] = 0x7;                           // Enable pilot, L-R, and RDS
 
   this->enabled_ = true;
   this->set_power(100);
@@ -334,13 +335,13 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   this->set_property(SI4713_PROP_TX_AUDIO_DEVIATION, 6625);  // 66.25KHz (default is 68.25)
   this->set_property(SI4713_PROP_TX_RDS_DEVIATION, 200);     // 2KHz (default)
   // this->set_property(SI4713_PROP_TX_RDS_INTERRUPT_SOURCE, 0x0001);    // RDS IRQ
-  this->set_property(SI4713_PROP_TX_RDS_PI, programID);         // program identifier
-  this->set_property(SI4713_PROP_TX_RDS_PS_MIX, 0x03);          // 50% mix (default)
-  this->set_property(SI4713_PROP_TX_RDS_PS_REPEAT_COUNT, 3);    // 3 repeats (default)
-  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);      // 1 message (default)
-  this->set_property(SI4713_PROP_TX_RDS_PS_AF, 0xE0E0);         // no AF (default)
-  this->set_property(SI4713_PROP_TX_RDS_FIFO_SIZE, 0);          // no FIFO (default)
-  this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x0007);  // enable RDS, stereo, tone
+  this->set_property(SI4713_PROP_TX_RDS_PI, programID);       // program identifier
+  this->set_property(SI4713_PROP_TX_RDS_PS_MIX, 0x03);        // 50% mix (default)
+  this->set_property(SI4713_PROP_TX_RDS_PS_REPEAT_COUNT, 3);  // 3 repeats (default)
+  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);    // 1 message (default)
+  this->set_property(SI4713_PROP_TX_RDS_PS_AF, 0xE0E0);       // no AF (default)
+  this->set_property(SI4713_PROP_TX_RDS_FIFO_SIZE, 0);        // no FIFO (default)
+  // this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x0007);  // enable RDS, stereo, tone
   // 0 PTY is static
   // 0 not compressed
   // 0 not artificial head

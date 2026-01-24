@@ -30,5 +30,24 @@ void Si4713ChannelMuteSwitch::on_property(uint16_t reg, uint16_t value) {
   }
 }
 
+void Si4713ComponentSwitch::write_state(bool state) {
+  if (parent_ != nullptr) {
+    if (state) {
+      // set the bit
+      (*(parent_->get_properties_next()))[SI4713_PROP_TX_COMPONENT_ENABLE] |= (1 << bit_pos_);
+    } else {
+      // clear the bit
+      (*(parent_->get_properties_next()))[SI4713_PROP_TX_COMPONENT_ENABLE] &= ~(1 << bit_pos_);
+    }
+  }
+}
+
+void Si4713ComponentSwitch::on_property(uint16_t reg, uint16_t value) {
+  if (reg == SI4713_PROP_TX_COMPONENT_ENABLE) {
+    bool is_enabled = (value >> bit_pos_) & 0x1;
+    publish_state(is_enabled);
+  }
+}
+
 }  // namespace si4713
 }  // namespace esphome
