@@ -6,6 +6,9 @@
 #include "esphome/core/hal.h"
 #include "si4713_consts.h"
 #include "si4713_structs.h"
+// #ifdef USE_BUTTON
+#include "esphome/components/button/button.h"
+// #endif
 
 namespace esphome {
 namespace si4713 {
@@ -71,6 +74,11 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_tune_status(const tune_status_t &tunestatus);
   void print_prop_table(const prop_table_t &table);
 
+  // child entities setters
+
+  // #ifdef USE_BUTTON
+  void set_reset_button(button::Button *button) { this->reset_button_ = button; };
+  // #endif  // USE_BUTTON
  protected:
   // Low-level hardware control functions
   void toggle_reset_pin_();
@@ -87,9 +95,6 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   // Pin definitions
   GPIOPin *reset_pin_;
-
-  // child components
-  // TODO
 
   // TODO remove and make set_power use the corresponding sensors for state
   bool enabled_;
@@ -109,14 +114,21 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
       {SI4713_PROP_TX_ASQ_LEVEL_LOW, 0},     // Si4713LevelThresholdNumber
       {SI4713_PROP_TX_AQS_LEVEL_HIGH, 0},    // Si4713LevelThresholdNumber
       {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  // Si4713ComponentSwitch
-      {SI4713_PROP_TX_ASQ_DURATION_LOW, 0},  // TODO
 
+      // {SI4713_PROP_TX_ASQ_DURATION_LOW, 0},   // TODO
+      // {SI4713_PROP_TX_AQS_DURATION_HIGH, 0},  // TODO
       // {SI4713_PROP_TX_RDS_PI, 0},
       // {SI4713_PROP_TX_RDS_PS_MIX, 0},
       // {SI4713_PROP_TX_RDS_PS_MISC, 0},
       // {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
   };
   prop_table_t properties_next_;
+
+  // child entities
+
+  // #ifdef USE_BUTTON
+  button::Button *reset_button_{nullptr};
+  // #endif  // USE_BUTTON
 };
 
 }  // namespace si4713

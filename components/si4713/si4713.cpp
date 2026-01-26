@@ -21,6 +21,10 @@ void Si4713Hub::dump_config() {
   ESP_LOGCONFIG(TAG, "Si4713Hub");
   LOG_I2C_DEVICE(this);
   LOG_PIN("  Reset Pin: ", this->reset_pin_);
+#ifdef USE_BUTTON
+  ESP_LOGCONFIG(TAG, "Button:");
+  LOG_BUTTON("  ", "TX Reset Button", this->reset_button_);
+#endif  // USE_BUTTON
 }
 
 void Si4713Hub::setup() {
@@ -42,6 +46,7 @@ void Si4713Hub::setup() {
   asq_status_curr_ = this->get_asq_status(true);
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
+
   this->print_prop_table(properties_curr_);
   ESP_LOGV(TAG, "Pulling initial property table");
   this->get_prop_table(properties_curr_);
