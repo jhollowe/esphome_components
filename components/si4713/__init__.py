@@ -6,6 +6,12 @@ from esphome.const import CONF_ID, CONF_RESET_PIN
 
 DEPENDENCIES = ["i2c"]
 
+# TODO see if this can support multiple devices (up to 2 since there are only 2 I2C addresses)
+# MULTI_CONF = True
+
+# Datasheet: https://cdn-shop.adafruit.com/datasheets/Si4712-13-B30.pdf
+# Control Guide: https://cdn-shop.adafruit.com/datasheets/SiLabs%20Programming%20guide%20AN332.pdf
+
 DOMAIN = "si4713"
 CONF_SI4713_ID = f"{DOMAIN}_id"
 
@@ -25,9 +31,6 @@ CONFIG_SCHEMA = (
     .extend(i2c.i2c_device_schema(0x63))
     .extend(cv.polling_component_schema(DEFAULT_POLLING_INTERVAL))
 )
-
-# Datasheet: https://cdn-shop.adafruit.com/datasheets/Si4712-13-B30.pdf
-# Control Guide: https://cdn-shop.adafruit.com/datasheets/SiLabs%20Programming%20guide%20AN332.pdf
 
 # Actions
 # Si4713SetFrequencyAction = si4713_ns.class_("Si4713SetFrequencyAction", automation.Action)

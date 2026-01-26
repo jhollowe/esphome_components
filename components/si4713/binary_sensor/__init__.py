@@ -41,15 +41,18 @@ async def to_code(config):
         cg.add(overmod_sensor.set_parent(paren))
         cg.add(overmod_sensor.set_type(Si4713AsqBSType.OVERMOD))
         cg.add(paren.register_listener(overmod_sensor))
+        cg.add(paren.set_overmod_bsensor(overmod_sensor))
 
     if audio_low_cfg := config.get(CONF_AUDIO_LOW):
         audio_low_sensor = await binary_sensor.new_binary_sensor(audio_low_cfg)
         cg.add(audio_low_sensor.set_parent(paren))
         cg.add(audio_low_sensor.set_type(Si4713AsqBSType.AUDIO_LOW))
         cg.add(paren.register_listener(audio_low_sensor))
+        cg.add(paren.set_audio_low_bsensor(audio_low_sensor))
 
     if audio_high_cfg := config.get(CONF_AUDIO_HIGH):
         audio_high_sensor = await binary_sensor.new_binary_sensor(audio_high_cfg)
         cg.add(audio_high_sensor.set_parent(paren))
         cg.add(audio_high_sensor.set_type(Si4713AsqBSType.AUDIO_HIGH))
         cg.add(paren.register_listener(audio_high_sensor))
+        cg.add(paren.set_audio_high_bsensor(audio_high_sensor))

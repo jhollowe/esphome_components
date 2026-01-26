@@ -31,3 +31,4 @@ async def to_code(config):
         line_level_sensor = await sensor.new_sensor(line_level_cfg)
         cg.add(line_level_sensor.set_parent(paren))
         cg.add(paren.register_listener(line_level_sensor))
+        cg.add(paren.set_input_line_level_sensor(line_level_sensor))

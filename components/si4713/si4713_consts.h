@@ -90,10 +90,10 @@ namespace si4713 {
 #define SI4713_PROP_TX_ASQ_DURATION_LOW \
   0x2302  ///< Configures the duration which the input audio level must be below
           ///< the low threshold in order to detect a low audio condition.
-#define SI4713_PROP_TX_AQS_LEVEL_HIGH \
+#define SI4713_PROP_TX_ASQ_LEVEL_HIGH \
   0x2303  ///< Configures high audio input level detection threshold. This
           ///< threshold can be used to detect activity on the incoming audio.
-#define SI4713_PROP_TX_AQS_DURATION_HIGH \
+#define SI4713_PROP_TX_ASQ_DURATION_HIGH \
   0x2304  ///< Configures the duration which the input audio level must be above
           ///< the high threshold in order to detect a high audio condition.
 #define SI4713_PROP_TX_RDS_INTERRUPT_SOURCE 0x2C00  ///< Configure RDS interrupt sources. Default is none selected.

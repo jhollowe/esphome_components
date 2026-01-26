@@ -52,39 +52,39 @@ async def to_code(config):
         enable_tx_switch = await switch.new_switch(enable_tx_cfg)
         # await cg.register_component(enable_tx_switch, config)
         cg.add(enable_tx_switch.set_parent(paren))
-        # cg.add(paren.set_enabled_switch(enable_tx_switch))
+        cg.add(paren.set_enabled_switch(enable_tx_switch))
 
     if mute_left_cfg := config.get(CONF_MUTE_LEFT):
         mute_left_switch = await switch.new_switch(mute_left_cfg)
         cg.add(mute_left_switch.set_parent(paren))
         cg.add(mute_left_switch.set_is_left_channel(True))
         cg.add(paren.register_listener(mute_left_switch))
-        # cg.add(paren.set_mute_left_switch(mute_left_switch))
+        cg.add(paren.set_channel_mute_left_switch(mute_left_switch))
 
     if mute_right_cfg := config.get(CONF_MUTE_RIGHT):
         mute_right_switch = await switch.new_switch(mute_right_cfg)
         cg.add(mute_right_switch.set_parent(paren))
         cg.add(mute_right_switch.set_is_left_channel(False))
         cg.add(paren.register_listener(mute_right_switch))
-        # cg.add(paren.set_mute_right_switch(mute_right_switch))
+        cg.add(paren.set_channel_mute_right_switch(mute_right_switch))
 
     if enable_pilot_cfg := config.get(CONF_ENABLE_PILOT):
         enable_pilot_switch = await switch.new_switch(enable_pilot_cfg)
         cg.add(enable_pilot_switch.set_parent(paren))
         cg.add(enable_pilot_switch.set_bit_pos(0))
         cg.add(paren.register_listener(enable_pilot_switch))
-        # cg.add(paren.set_enable_pilot_switch(enable_pilot_switch))
+        cg.add(paren.set_enable_pilot_switch(enable_pilot_switch))
 
     if enable_stereo_cfg := config.get(CONF_ENABLE_STEREO):
         enable_stereo_switch = await switch.new_switch(enable_stereo_cfg)
         cg.add(enable_stereo_switch.set_parent(paren))
         cg.add(enable_stereo_switch.set_bit_pos(1))
         cg.add(paren.register_listener(enable_stereo_switch))
-        # cg.add(paren.set_enable_stereo_switch(enable_stereo_switch))
+        cg.add(paren.set_enable_stereo_switch(enable_stereo_switch))
 
     if enable_rds_cfg := config.get(CONF_ENABLE_RDS):
         enable_rds_switch = await switch.new_switch(enable_rds_cfg)
         cg.add(enable_rds_switch.set_parent(paren))
         cg.add(enable_rds_switch.set_bit_pos(2))
         cg.add(paren.register_listener(enable_rds_switch))
-        # cg.add(paren.set_enable_rds_switch(enable_rds_switch))
+        cg.add(paren.set_enable_rds_switch(enable_rds_switch))

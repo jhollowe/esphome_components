@@ -15,16 +15,42 @@ static uint8_t calc_checksum(void *data, size_t size) {
   }
   return checksum;
 }
-// TODO see if this can support multiple devices (up to 2 since there are only 2 I2C addresses)
 
 void Si4713Hub::dump_config() {
   ESP_LOGCONFIG(TAG, "Si4713Hub");
   LOG_I2C_DEVICE(this);
   LOG_PIN("  Reset Pin: ", this->reset_pin_);
 #ifdef USE_BUTTON
-  ESP_LOGCONFIG(TAG, "Button:");
+  ESP_LOGCONFIG(TAG, "Buttons:");
   LOG_BUTTON("  ", "TX Reset Button", this->reset_button_);
 #endif  // USE_BUTTON
+#ifdef USE_SWITCH
+  ESP_LOGCONFIG(TAG, "Switches:");
+  LOG_SWITCH("  ", "TX Enable Switch", this->enabled_switch_);
+  LOG_SWITCH("  ", "Mute Left Switch", this->channel_mute_left_switch_);
+  LOG_SWITCH("  ", "Mute Right Switch", this->channel_mute_right_switch_);
+  LOG_SWITCH("  ", "Enable Pilot Switch", this->enable_pilot_switch_);
+  LOG_SWITCH("  ", "Enable Stereo Switch", this->enable_stereo_switch_);
+  LOG_SWITCH("  ", "EnableRDS Switch", this->enable_rds_switch_);
+#endif  // USE_SWITCH
+#ifdef USE_NUMBER
+  ESP_LOGCONFIG(TAG, "Numbers:");
+  LOG_NUMBER("  ", "TX Frequency Number", this->frequency_number_);
+  LOG_NUMBER("  ", "TX Power Number", this->power_number_);
+  LOG_NUMBER("  ", "Max Line Level Number", this->max_line_level_number_);
+  LOG_NUMBER("  ", "Low Level Threshold Number", this->low_threshold_number_);
+  LOG_NUMBER("  ", "High Level Threshold Number", this->high_threshold_number_);
+#endif  // USE_NUMBER
+#ifdef USE_BINARY_SENSOR
+  ESP_LOGCONFIG(TAG, "Binary Sensors:");
+  LOG_BINARY_SENSOR("  ", "Audio High Sensor", this->audio_high_bsensor_);
+  LOG_BINARY_SENSOR("  ", "Audio Low Sensor", this->audio_low_bsensor_);
+  LOG_BINARY_SENSOR("  ", "Overmod Sensor", this->overmod_bsensor_);
+#endif  // USE_BINARY_SENSOR
+#ifdef USE_SENSOR
+  ESP_LOGCONFIG(TAG, "Sensors:");
+  LOG_SENSOR("  ", "Input Line Level Sensor", this->input_line_level_sensor_);
+#endif  // USE_SENSOR
 }
 
 void Si4713Hub::setup() {
@@ -64,6 +90,7 @@ void Si4713Hub::setup() {
 
   properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
   properties_next_[SI4713_PROP_TX_ASQ_LEVEL_LOW] = 0xff & static_cast<int8_t>(-40);  // -40 db (8bit 2's complement)
+  properties_next_[SI4713_PROP_TX_ASQ_LEVEL_HIGH] = 0xff & static_cast<int8_t>(-5);  // -40 db (8bit 2's complement)
   properties_next_[SI4713_PROP_TX_ASQ_DURATION_LOW] = 30;                            // 30ms
   properties_next_[SI4713_PROP_TX_COMPONENT_ENABLE] = 0x7;                           // Enable pilot, L-R, and RDS
 

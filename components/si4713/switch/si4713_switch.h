@@ -10,15 +10,15 @@ namespace si4713 {
 const char *const S_TAG = "si4713.switch";
 
 // class Si4713BaseSwitch : public switch_::Switch, public Component, public Parented<Si4713Hub> {};
-class Si4713BaseSwitch : public switch_::Switch, public Parented<Si4713Hub> {};
+class Si4713BaseSwitch : public switch_::Switch, public Si4713Listener {};
 
-class Si4713EnableSwitch : public Si4713BaseSwitch {
+class Si4713EnableSwitch : public switch_::Switch, public Parented<Si4713Hub> {
  protected:
   // overrides from interface (Switch)
   void write_state(bool state) override;
 };
 
-class Si4713ChannelMuteSwitch : public switch_::Switch, public Si4713Listener {
+class Si4713ChannelMuteSwitch : public Si4713BaseSwitch {
  public:
   void set_is_left_channel(bool is_left) { this->is_left_channel_ = is_left; }
 
@@ -31,7 +31,7 @@ class Si4713ChannelMuteSwitch : public switch_::Switch, public Si4713Listener {
   bool is_left_channel_;
 };
 
-class Si4713ComponentSwitch : public switch_::Switch, public Si4713Listener {
+class Si4713ComponentSwitch : public Si4713BaseSwitch {
  public:
   void set_bit_pos(uint8_t bit_pos) { this->bit_pos_ = bit_pos; }
 

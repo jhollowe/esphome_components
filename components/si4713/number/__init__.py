@@ -81,6 +81,7 @@ async def to_code(config):
         )
         await cg.register_component(freq_num, config)
         cg.add(freq_num.set_parent(paren))
+        cg.add(paren.set_frequency_number(freq_num))
 
     if power_cfg := config.get(CONF_POWER):
         power_num = await number.new_number(
@@ -91,6 +92,7 @@ async def to_code(config):
         )
         await cg.register_component(power_num, config)
         cg.add(power_num.set_parent(paren))
+        cg.add(paren.set_power_number(power_num))
 
     if max_line_cfg := config.get(CONF_MAX_LINE_LEVEL):
         max_line_num = await number.new_number(
@@ -99,9 +101,10 @@ async def to_code(config):
             max_value=max_line_cfg.get("max_value", 636),
             step=max_line_cfg.get("step", 1.0),
         )
-        # await cg.register_component(max_line_num, config)
+
         cg.add(max_line_num.set_parent(paren))
         cg.add(paren.register_listener(max_line_num))
+        cg.add(paren.set_max_line_level_number(max_line_num))
 
     if low_thresh_cfg := config.get(CONF_LOW_THRESH):
         low_thresh_num = await number.new_number(
@@ -113,6 +116,7 @@ async def to_code(config):
         cg.add(low_thresh_num.set_parent(paren))
         cg.add(low_thresh_num.set_is_low_thresh(True))
         cg.add(paren.register_listener(low_thresh_num))
+        cg.add(paren.set_low_threshold_number(low_thresh_num))
 
     if high_thresh_cfg := config.get(CONF_HIGH_THRESH):
         high_thresh_num = await number.new_number(
@@ -124,3 +128,4 @@ async def to_code(config):
         cg.add(high_thresh_num.set_parent(paren))
         cg.add(high_thresh_num.set_is_low_thresh(False))
         cg.add(paren.register_listener(high_thresh_num))
+        cg.add(paren.set_high_threshold_number(high_thresh_num))

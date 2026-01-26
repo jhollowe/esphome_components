@@ -1,14 +1,29 @@
 #pragma once
 
+#include "esphome/core/defines.h"
+
 #include "esphome/components/i2c/i2c.h"
 #include "esphome/core/component.h"
 #include "esphome/core/gpio.h"
 #include "esphome/core/hal.h"
 #include "si4713_consts.h"
 #include "si4713_structs.h"
-// #ifdef USE_BUTTON
+
+#ifdef USE_BUTTON
 #include "esphome/components/button/button.h"
-// #endif
+#endif
+#ifdef USE_NUMBER
+#include "esphome/components/number/number.h"
+#endif
+#ifdef USE_SWITCH
+#include "esphome/components/switch/switch.h"
+#endif
+#ifdef USE_SENSOR
+#include "esphome/components/sensor/sensor.h"
+#endif
+#ifdef USE_BINARY_SENSOR
+#include "esphome/components/binary_sensor/binary_sensor.h"
+#endif
 
 namespace esphome {
 namespace si4713 {
@@ -76,9 +91,32 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   // child entities setters
 
-  // #ifdef USE_BUTTON
+#ifdef USE_BUTTON
   void set_reset_button(button::Button *button) { this->reset_button_ = button; };
-  // #endif  // USE_BUTTON
+#endif  // USE_BUTTON
+#ifdef USE_SWITCH
+  void set_enabled_switch(switch_::Switch *sw) { this->enabled_switch_ = sw; };
+  void set_channel_mute_left_switch(switch_::Switch *sw) { this->channel_mute_left_switch_ = sw; };
+  void set_channel_mute_right_switch(switch_::Switch *sw) { this->channel_mute_right_switch_ = sw; };
+  void set_enable_pilot_switch(switch_::Switch *sw) { this->enable_pilot_switch_ = sw; };
+  void set_enable_stereo_switch(switch_::Switch *sw) { this->enable_stereo_switch_ = sw; };
+  void set_enable_rds_switch(switch_::Switch *sw) { this->enable_rds_switch_ = sw; };
+#endif  // USE_SWITCH
+#ifdef USE_NUMBER
+  void set_frequency_number(number::Number *num) { this->frequency_number_ = num; };
+  void set_power_number(number::Number *num) { this->power_number_ = num; };
+  void set_max_line_level_number(number::Number *num) { this->max_line_level_number_ = num; };
+  void set_low_threshold_number(number::Number *num) { this->low_threshold_number_ = num; };
+  void set_high_threshold_number(number::Number *num) { this->high_threshold_number_ = num; };
+#endif  // USE_NUMBER
+#ifdef USE_BINARY_SENSOR
+  void set_audio_high_bsensor(binary_sensor::BinarySensor *sens) { this->audio_high_bsensor_ = sens; };
+  void set_audio_low_bsensor(binary_sensor::BinarySensor *sens) { this->audio_low_bsensor_ = sens; };
+  void set_overmod_bsensor(binary_sensor::BinarySensor *sens) { this->overmod_bsensor_ = sens; };
+#endif  // USE_BINARY_SENSOR
+#ifdef USE_SENSOR
+  void set_input_line_level_sensor(sensor::Sensor *sens) { this->input_line_level_sensor_ = sens; };
+#endif  // USE_SENSOR
  protected:
   // Low-level hardware control functions
   void toggle_reset_pin_();
@@ -86,9 +124,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void power_down_();
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
-  void get_prop_table(prop_table_t &table);
   void set_property_(uint16_t property, uint16_t value);
-  // set_changed_properties(prop_table_t &current, prop_table_t &next);
+  void get_prop_table(prop_table_t &table);
 
   // TODO remove if unused
   void measure_freq(uint16_t freq_khz);
@@ -112,11 +149,11 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
       {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},  // Si4713MaxLineLevelNumber
       {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   // Si4713ChannelMuteSwitch
       {SI4713_PROP_TX_ASQ_LEVEL_LOW, 0},     // Si4713LevelThresholdNumber
-      {SI4713_PROP_TX_AQS_LEVEL_HIGH, 0},    // Si4713LevelThresholdNumber
+      {SI4713_PROP_TX_ASQ_LEVEL_HIGH, 0},    // Si4713LevelThresholdNumber
       {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  // Si4713ComponentSwitch
 
       // {SI4713_PROP_TX_ASQ_DURATION_LOW, 0},   // TODO
-      // {SI4713_PROP_TX_AQS_DURATION_HIGH, 0},  // TODO
+      // {SI4713_PROP_TX_ASQ_DURATION_HIGH, 0},  // TODO
       // {SI4713_PROP_TX_RDS_PI, 0},
       // {SI4713_PROP_TX_RDS_PS_MIX, 0},
       // {SI4713_PROP_TX_RDS_PS_MISC, 0},
@@ -126,9 +163,32 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   // child entities
 
-  // #ifdef USE_BUTTON
+#ifdef USE_BUTTON
   button::Button *reset_button_{nullptr};
-  // #endif  // USE_BUTTON
+#endif  // USE_BUTTON
+#ifdef USE_SWITCH
+  switch_::Switch *enabled_switch_{nullptr};
+  switch_::Switch *channel_mute_left_switch_{nullptr};
+  switch_::Switch *channel_mute_right_switch_{nullptr};
+  switch_::Switch *enable_pilot_switch_{nullptr};
+  switch_::Switch *enable_stereo_switch_{nullptr};
+  switch_::Switch *enable_rds_switch_{nullptr};
+#endif  // USE_SWITCH
+#ifdef USE_NUMBER
+  number::Number *frequency_number_{nullptr};
+  number::Number *power_number_{nullptr};
+  number::Number *max_line_level_number_{nullptr};
+  number::Number *low_threshold_number_{nullptr};
+  number::Number *high_threshold_number_{nullptr};
+#endif  // USE_NUMBER
+#ifdef USE_BINARY_SENSOR
+  binary_sensor::BinarySensor *audio_high_bsensor_{nullptr};
+  binary_sensor::BinarySensor *audio_low_bsensor_{nullptr};
+  binary_sensor::BinarySensor *overmod_bsensor_{nullptr};
+#endif  // USE_BINARY_SENSOR
+#ifdef USE_SENSOR
+  sensor::Sensor *input_line_level_sensor_{nullptr};
+#endif  // USE_SENSOR
 };
 
 }  // namespace si4713
