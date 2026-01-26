@@ -116,6 +116,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 #endif  // USE_BINARY_SENSOR
 #ifdef USE_SENSOR
   void set_input_line_level_sensor(sensor::Sensor *sens) { this->input_line_level_sensor_ = sens; };
+  void set_tune_capacitor_sensor(sensor::Sensor *sens) { this->tune_capacitor_sensor_ = sens; };
 #endif  // USE_SENSOR
  protected:
   // Low-level hardware control functions
@@ -188,6 +189,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 #endif  // USE_BINARY_SENSOR
 #ifdef USE_SENSOR
   sensor::Sensor *input_line_level_sensor_{nullptr};
+  sensor::Sensor *tune_capacitor_sensor_{nullptr};
 #endif  // USE_SENSOR
 };
 

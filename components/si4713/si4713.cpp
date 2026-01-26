@@ -50,6 +50,7 @@ void Si4713Hub::dump_config() {
 #ifdef USE_SENSOR
   ESP_LOGCONFIG(TAG, "Sensors:");
   LOG_SENSOR("  ", "Input Line Level Sensor", this->input_line_level_sensor_);
+  LOG_SENSOR("  ", "Tune Capacitor Sensor", this->tune_capacitor_sensor_);
 #endif  // USE_SENSOR
 }
 

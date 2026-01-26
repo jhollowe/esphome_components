@@ -63,6 +63,9 @@ sensor:
     line_level:
       name: "${friendly_name} Line Input Level"
       id: tx_line_level
+    tune_capacitor:
+      name: "${friendly_name} Tune Capacitor"
+      id: tx_tune_capacitor
 
 number:
   - platform: si4713

@@ -9,8 +9,10 @@ DEPENDENCIES = [DOMAIN]
 
 common_classes = [sensor.Sensor, cg.Parented.template(Si4713Hub)]
 Si4713LineLevelSensor = si4713_ns.class_("Si4713LineLevelSensor", *common_classes, Si4713Listener)
+Si4713CapacitorSensor = si4713_ns.class_("Si4713CapacitorSensor", *common_classes, Si4713Listener)
 
 CONF_LINE_LEVEL = "line_level"
+CONF_CAPACITOR = "tune_capacitor"
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -20,6 +22,10 @@ CONFIG_SCHEMA = cv.Schema(
             accuracy_decimals=0,
             device_class=DEVICE_CLASS_SOUND_PRESSURE,
             unit_of_measurement=UNIT_DECIBEL,
+        ),
+        cv.Optional(CONF_CAPACITOR): sensor.sensor_schema(
+            Si4713CapacitorSensor,
+            accuracy_decimals=0,
         ),
     }
 )
@@ -32,3 +38,9 @@ async def to_code(config):
         cg.add(line_level_sensor.set_parent(paren))
         cg.add(paren.register_listener(line_level_sensor))
         cg.add(paren.set_input_line_level_sensor(line_level_sensor))
+
+    if capacitor_cfg := config.get(CONF_CAPACITOR):
+        capacitor_sensor = await sensor.new_sensor(capacitor_cfg)
+        cg.add(capacitor_sensor.set_parent(paren))
+        cg.add(paren.register_listener(capacitor_sensor))
+        cg.add(paren.set_tune_capacitor_sensor(capacitor_sensor))
