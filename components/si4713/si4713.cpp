@@ -65,16 +65,15 @@ void Si4713Hub::setup() {
   this->print_rev_info(info);
   if (info.part_number != 13) {
     ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
+    // TODO error out
   }
 
   // pull initial data to current state variables
-  ESP_LOGV(TAG, "Pulling initial tune and ASQ statuses");  // DEBUG
+  ESP_LOGV(TAG, "Pulling initial tune and ASQ statuses");
   tune_status_curr_ = this->get_tune_status(true);
   asq_status_curr_ = this->get_asq_status(true);
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
-
-  this->print_prop_table(properties_curr_);  // DEBUG
 
   // setup default properties if this is the first setup
   if (!this->has_been_setup_) {
@@ -148,9 +147,8 @@ void Si4713Hub::update() {
     }
   }
 
-  // DEBUG
-  // this->print_asq_status(asq_status_curr_);
-  this->print_tune_status(tune_status_curr_);
+  // this->print_asq_status(asq_status_curr_);    // DEBUG
+  // this->print_tune_status(tune_status_curr_);  // DEBUG
 
   // iterate through next properties and notify listeners if the value is different from current
   for (const auto &[prop, val] : properties_next_) {
@@ -174,7 +172,6 @@ void Si4713Hub::update() {
 }
 
 void Si4713Hub::toggle_reset_pin_() {
-  // TODO make this non-blocking with callbacks
   // RST needs to be pulled low to reset
   this->reset_pin_->digital_write(true);
   delay(10);
@@ -188,7 +185,7 @@ void Si4713Hub::power_up_() {
       // 0 CTS interrupt disabled
       // 0 GPO2 output disabled
       // 0 Boot normally (no firmware patch)
-      // 1 crystal oscillator ENabled
+      // 1 crystal oscillator Enabled
       // 0010 function: FM transmit
       0b00010010,
       // analog input mode
@@ -232,14 +229,13 @@ uint8_t Si4713Hub::wait_for_cts_() {
     max_attempts--;
   } while ((status & SI4710_STATUS_CTS) == 0 && max_attempts > 0);
   if (max_attempts == 0) {
+    // TODO error out
     this->status_set_error(LOG_STR("Timed out waiting for Clear To Send (CTS) from Si4713"));
   }
   return status;
 }
 
 void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
-  // TODO this should update the properties_next table too
-  //     or be protected
   uint8_t args[] = {
       0,  // must always be 0
       static_cast<uint8_t>(property >> 8),
@@ -253,8 +249,6 @@ void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
 }
 
 uint16_t Si4713Hub::get_property(uint16_t property) {
-  // TODO this should update the properties_next table while we are already pulling the data
-  //     or be protected
   uint8_t args[] = {
       SI4710_CMD_GET_PROPERTY,
       0,  // must always be 0
@@ -443,7 +437,7 @@ void Si4713Hub::print_rev_info(const rev_info_t &info) {
 
 void Si4713Hub::print_status(uint8_t status) {
   // clang-format off
-    ESP_LOGD(TAG,
+    ESP_LOGV(TAG,
       "Status Register: 0x%02x (0b" BYTE_TO_BINARY_PATTERN ")\n"
       "  CTS:    %u\n"
       "  ERR:    %u\n"
@@ -472,10 +466,6 @@ void Si4713Hub::print_asq_status(const asq_status_t &asq) {
       asq.overmod,
       asq.in_audio_detect_high,
       asq.in_audio_detect_low,
-      // asq.asqint ? 1 : 0,
-      // asq.overmod ? 1 : 0,
-      // asq.in_audio_detect_high ? 1 : 0,
-      // asq.in_audio_detect_low ? 1 : 0,
       asq.in_audio_level);
   // clang-format on
 }

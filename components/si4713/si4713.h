@@ -117,7 +117,6 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // Low-level hardware control functions
   void toggle_reset_pin_();
   void power_up_();
-  void power_down_();
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
   void set_property_(uint16_t property, uint16_t value);
@@ -127,6 +126,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   // TODO remove if unused
   void measure_freq(uint16_t freq_khz);
+  void power_down_();
 
   // Pin definitions
   GPIOPin *reset_pin_;

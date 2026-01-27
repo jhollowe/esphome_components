@@ -13,7 +13,9 @@ class Si4713LineLevelSensor : public Si4713BaseSensor {
  public:
   // overrides from Si4713Listener
   void on_asq_status(const asq_status_t &status) override {
-    this->publish_state(static_cast<float>(status.in_audio_level));
+    float val = static_cast<float>(status.in_audio_level);
+    if (state != val)
+      this->publish_state(val);
   }
 };
 
@@ -21,7 +23,9 @@ class Si4713CapacitorSensor : public Si4713BaseSensor {
  public:
   // overrides from Si4713Listener
   void on_tune_status(const tune_status_t &status) override {
-    this->publish_state(static_cast<float>(status.tune_capacitor));
+    float val = static_cast<float>(status.tune_capacitor);
+    if (state != val)
+      this->publish_state(val);
   }
 };
 
