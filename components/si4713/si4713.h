@@ -121,7 +121,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
   void set_property_(uint16_t property, uint16_t value);
-  void get_prop_table(prop_table_t &table);
+  void get_prop_table_(prop_table_t &table);
 
   std::vector<Si4713Listener *> listeners_{};
 
@@ -136,6 +136,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   bool enabled_ = true;
   uint8_t power_ = 100;
   uint16_t frequency_ = 9330;  // default to 93.3 MHz
+  bool has_been_setup_ = false;
 
   tune_status_t tune_status_last_;
   tune_status_t tune_status_curr_;

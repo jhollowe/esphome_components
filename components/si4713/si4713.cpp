@@ -68,36 +68,40 @@ void Si4713Hub::setup() {
   }
 
   // pull initial data to current state variables
-  ESP_LOGV(TAG, "Pulling initial tune and ASQ statuses");
+  ESP_LOGV(TAG, "Pulling initial tune and ASQ statuses");  // DEBUG
   tune_status_curr_ = this->get_tune_status(true);
   asq_status_curr_ = this->get_asq_status(true);
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
 
-  this->print_prop_table(properties_curr_);
-  ESP_LOGV(TAG, "Pulling initial property table");
-  this->get_prop_table(properties_curr_);
-  properties_next_ = properties_curr_;
-  this->print_prop_table(properties_curr_);
+  this->print_prop_table(properties_curr_);  // DEBUG
 
-  // TODO remove all below
-  // testing setup and hardcoded configuration
-  this->print_tune_status(this->get_tune_status());
-  // ESP_LOGD(TAG, "Setting frequency");
-  this->set_freq(9330);  // set to 93.3 MHz
-  // this->print_tune_status(this->get_tune_status());
+  // setup default properties if this is the first setup
+  if (!this->has_been_setup_) {
+    ESP_LOGV(TAG, "Pulling initial property table");  // DEBUG
+    this->get_prop_table_(properties_curr_);
+    properties_next_ = properties_curr_;
 
-  // this->set_property(SI4713_PROP_TX_ACOMP_ENABLE, 0b11);  // enable the audio limiter and auto dynamic range control
+    ESP_LOGV(TAG, "setting property defaults");  // DEBUG
+    properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
+    properties_next_[SI4713_PROP_TX_ASQ_LEVEL_LOW] = 0xff & static_cast<int8_t>(-40);  // -40 db (8bit 2's complement)
+    properties_next_[SI4713_PROP_TX_ASQ_LEVEL_HIGH] = 0xff & static_cast<int8_t>(-5);  // -40 db (8bit 2's complement)
+    properties_next_[SI4713_PROP_TX_ASQ_DURATION_LOW] = 30;                            // 30ms
+    properties_next_[SI4713_PROP_TX_COMPONENT_ENABLE] = 0x7;                           // Enable pilot, L-R, and RDS
+    this->has_been_setup_ = true;
+  } else {
+    ESP_LOGV(TAG, "skipping property defaults");  // DEBUG
+    // sets the "current" properties to 0 to force re-application of all next properties
+    for (auto &[prop, val] : properties_curr_) {
+      val = 0;
+    }
+  }
+  this->print_prop_table(properties_curr_);  // DEBUG
 
-  properties_next_[SI4713_PROP_TX_LINE_INPUT_LEVEL] = 0x1000 | 300;
-  properties_next_[SI4713_PROP_TX_ASQ_LEVEL_LOW] = 0xff & static_cast<int8_t>(-40);  // -40 db (8bit 2's complement)
-  properties_next_[SI4713_PROP_TX_ASQ_LEVEL_HIGH] = 0xff & static_cast<int8_t>(-5);  // -40 db (8bit 2's complement)
-  properties_next_[SI4713_PROP_TX_ASQ_DURATION_LOW] = 30;                            // 30ms
-  properties_next_[SI4713_PROP_TX_COMPONENT_ENABLE] = 0x7;                           // Enable pilot, L-R, and RDS
-
-  this->enabled_ = true;
-  this->set_power(100);
-  this->print_tune_status(this->get_tune_status());
+  this->print_tune_status(this->get_tune_status());  // DEBUG
+  this->set_freq(frequency_);
+  this->set_power(power_);
+  this->print_tune_status(this->get_tune_status());  // DEBUG
 
   this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
   uint8_t ps1_1[] = {0x0, 'J', 'H', 'O', 'L'};
@@ -131,6 +135,9 @@ void Si4713Hub::update() {
     for (auto &listener : this->listeners_) {
       listener->on_tune_status(tune_status_curr_);
     }
+    // update stored power and frequency (prevent overwriting power if disabled (power==0))
+    power_ = tune_status_curr_.power == 0 ? power_ : tune_status_curr_.power;
+    frequency_ = tune_status_curr_.freq;
   }
   if (calc_checksum(&asq_status_last_, sizeof(asq_status_t)) !=
       calc_checksum(&asq_status_curr_, sizeof(asq_status_t))) {
@@ -162,7 +169,7 @@ void Si4713Hub::update() {
 
   // DEBUG make sure the props are getting set correctly
   // prop_table_t real_props = properties_curr_;
-  // this->get_prop_table(real_props);
+  // this->get_prop_table_(real_props);
   // this->print_prop_table(real_props);
 }
 
@@ -286,7 +293,7 @@ asq_status_t Si4713Hub::get_asq_status(bool clear_flags) {
   return asqstatus;
 }
 
-void Si4713Hub::get_prop_table(prop_table_t &table) {
+void Si4713Hub::get_prop_table_(prop_table_t &table) {
   // read all tracked properties in the table and update their values
   for (auto &[prop, val] : table) {
     val = this->get_property(prop);
