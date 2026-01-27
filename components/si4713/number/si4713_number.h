@@ -7,34 +7,30 @@
 namespace esphome {
 namespace si4713 {
 
-const char *const N_TAG = "si4713.number";
+class Si4713BaseNumber : public number::Number, public Si4713Listener {};
 
-class Si4713BaseNumber : public number::Number {};
-
-class Si4713FrequencyNumber : public Si4713BaseNumber, public Component, public Parented<Si4713Hub> {
-  // overrides from interface (Component)
-  void setup() override;
-  void dump_config() { LOG_NUMBER("", "Si4713 Frequency Number", this); }
+class Si4713FrequencyNumber : public Si4713BaseNumber {
   // overrides from interface (Number)
   void control(float value) override;
+  // overrides from interface (Si4713Listener)
+  void on_tune_status(const tune_status_t &status) override;
 };
 
-class Si4713PowerNumber : public Si4713BaseNumber, public Component, public Parented<Si4713Hub> {
-  // overrides from interface (Component)
-  void setup() override;
-  void dump_config() { LOG_NUMBER("", "Si4713 Power Number", this); }
+class Si4713PowerNumber : public Si4713BaseNumber {
   // overrides from interface (Number)
   void control(float value) override;
+  // overrides from interface (Si4713Listener)
+  void on_tune_status(const tune_status_t &status) override;
 };
 
-class Si4713MaxLineLevelNumber : public Si4713BaseNumber, public Si4713Listener {
+class Si4713MaxLineLevelNumber : public Si4713BaseNumber {
   // overrides from interface (Number)
   void control(float value) override;
   // overrides from interface (Si4713Listener)
   void on_property(uint16_t reg, uint16_t value) override;
 };
 
-class Si4713LevelThresholdNumber : public Si4713BaseNumber, public Si4713Listener {
+class Si4713LevelThresholdNumber : public Si4713BaseNumber {
  public:
   void set_is_low_thresh(bool is_low) { this->is_low_thresh_ = is_low; }
   bool get_is_low_thresh() const { return this->is_low_thresh_; }

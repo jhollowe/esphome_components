@@ -79,8 +79,8 @@ async def to_code(config):
             max_value=freq_cfg.get("max_value", 108.0),
             step=freq_cfg.get("step", 0.05),
         )
-        await cg.register_component(freq_num, config)
         cg.add(freq_num.set_parent(paren))
+        cg.add(paren.register_listener(freq_num))
         cg.add(paren.set_frequency_number(freq_num))
 
     if power_cfg := config.get(CONF_POWER):
@@ -90,8 +90,8 @@ async def to_code(config):
             max_value=power_cfg.get("max_value", 115),
             step=power_cfg.get("step", 1.0),
         )
-        await cg.register_component(power_num, config)
         cg.add(power_num.set_parent(paren))
+        cg.add(paren.register_listener(power_num))
         cg.add(paren.set_power_number(power_num))
 
     if max_line_cfg := config.get(CONF_MAX_LINE_LEVEL):

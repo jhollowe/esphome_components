@@ -7,15 +7,15 @@
 namespace esphome {
 namespace si4713 {
 
-const char *const S_TAG = "si4713.switch";
-
 // class Si4713BaseSwitch : public switch_::Switch, public Component, public Parented<Si4713Hub> {};
 class Si4713BaseSwitch : public switch_::Switch, public Si4713Listener {};
 
-class Si4713EnableSwitch : public switch_::Switch, public Parented<Si4713Hub> {
+class Si4713EnableSwitch : public Si4713BaseSwitch {
  protected:
   // overrides from interface (Switch)
   void write_state(bool state) override;
+  // overrides from interface (Si4713Listener)
+  void on_tune_status(const tune_status_t &status) override;
 };
 
 class Si4713ChannelMuteSwitch : public Si4713BaseSwitch {

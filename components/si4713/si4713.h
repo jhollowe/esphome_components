@@ -30,7 +30,7 @@ namespace si4713 {
 
 static const char *const TAG = "si4713";
 
-//////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // Interface classes.
 class Si4713Hub;  // forward declaration
 class Si4713Listener : public Parented<Si4713Hub> {
@@ -40,7 +40,7 @@ class Si4713Listener : public Parented<Si4713Hub> {
   virtual void on_property(const uint16_t reg, const uint16_t value){};
 };
 
-/////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // Main Hub component class
 class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
  public:
@@ -57,19 +57,14 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   asq_status_t get_asq_status(bool clear_flags = true);
   tune_status_t get_tune_status(bool clear_flags = true);
 
-  // used by number components
-  // TODO can these be protected? maybe friend needed?
+  // Used by Si4713FrequencyNumber and Si4713PowerNumber
   void set_freq(uint16_t freq_khz);
   void set_power(uint8_t power);  // respects enabled_ flag
 
   // used by switch components
-  // TODO set the enabled switch as a field and use that to get/set state
   void set_enabled(bool enabled);
-  bool get_enabled() const { return this->enabled_; }
 
-  // used by various components
-  // also public so lambda functions can access them
-  // TODO delete?
+  // public so lambda functions can access them
   void set_property(uint16_t property, uint16_t value) { this->set_property_(property, value); };
   uint16_t get_property(uint16_t property);
 
@@ -89,8 +84,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void print_tune_status(const tune_status_t &tunestatus);
   void print_prop_table(const prop_table_t &table);
 
+  //////////////////////////////////////////////////////////////////////
   // child entities setters
-
 #ifdef USE_BUTTON
   void set_reset_button(button::Button *button) { this->reset_button_ = button; };
 #endif  // USE_BUTTON
@@ -128,40 +123,41 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void set_property_(uint16_t property, uint16_t value);
   void get_prop_table(prop_table_t &table);
 
+  std::vector<Si4713Listener *> listeners_{};
+
   // TODO remove if unused
   void measure_freq(uint16_t freq_khz);
 
   // Pin definitions
   GPIOPin *reset_pin_;
 
-  // TODO remove and make set_power use the corresponding sensors for state
-  bool enabled_;
-  uint8_t power_;
-
-  std::vector<Si4713Listener *> listeners_{};
-
+  //////////////////////////////////////////////////////////////////////
   // STATE MANAGEMENT
+  bool enabled_ = true;
+  uint8_t power_ = 100;
+  uint16_t frequency_ = 9330;  // default to 93.3 MHz
+
   tune_status_t tune_status_last_;
   tune_status_t tune_status_curr_;
   asq_status_t asq_status_last_;
   asq_status_t asq_status_curr_;
 
   prop_table_t properties_curr_ = {
-      {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},  // Si4713MaxLineLevelNumber
+#ifdef USE_SWITCH
       {SI4713_PROP_TX_LINE_INPUT_MUTE, 0},   // Si4713ChannelMuteSwitch
-      {SI4713_PROP_TX_ASQ_LEVEL_LOW, 0},     // Si4713LevelThresholdNumber
-      {SI4713_PROP_TX_ASQ_LEVEL_HIGH, 0},    // Si4713LevelThresholdNumber
       {SI4713_PROP_TX_COMPONENT_ENABLE, 0},  // Si4713ComponentSwitch
 
-      // {SI4713_PROP_TX_ASQ_DURATION_LOW, 0},   // TODO
-      // {SI4713_PROP_TX_ASQ_DURATION_HIGH, 0},  // TODO
-      // {SI4713_PROP_TX_RDS_PI, 0},
-      // {SI4713_PROP_TX_RDS_PS_MIX, 0},
-      // {SI4713_PROP_TX_RDS_PS_MISC, 0},
-      // {SI4713_PROP_TX_RDS_MESSAGE_COUNT, 0},
+#endif  // USE_SWITCH
+#ifdef USE_NUMBER
+      {SI4713_PROP_TX_LINE_INPUT_LEVEL, 0},  // Si4713MaxLineLevelNumber
+      {SI4713_PROP_TX_ASQ_LEVEL_LOW, 0},     // Si4713LevelThresholdNumber
+      {SI4713_PROP_TX_ASQ_LEVEL_HIGH, 0},    // Si4713LevelThresholdNumber
+
+#endif  // USE_NUMBER
   };
   prop_table_t properties_next_;
 
+  //////////////////////////////////////////////////////////////////////
   // child entities
 
 #ifdef USE_BUTTON

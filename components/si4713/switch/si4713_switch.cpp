@@ -10,6 +10,15 @@ void Si4713EnableSwitch::write_state(bool state) {
   }
 }
 
+void Si4713EnableSwitch::on_tune_status(const tune_status_t &status) {
+  ESP_LOGD(TAG, "Si4713EnableSwitch received tune status update: power=%u", status.power);
+  if (parent_ != nullptr) {
+    bool is_enabled = status.power > 0;
+    if (state != is_enabled)
+      publish_state(is_enabled);
+  }
+}
+
 void Si4713ChannelMuteSwitch::write_state(bool state) {
   if (parent_ != nullptr) {
     // Left channel is bit 1, Right channel is bit 0
