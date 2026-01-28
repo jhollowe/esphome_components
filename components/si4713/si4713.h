@@ -61,6 +61,10 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void set_freq(uint16_t freq_khz);
   void set_power(uint8_t power);  // respects enabled_ flag
 
+  // Setters for initial values
+  void set_initial_frequency(uint16_t freq_khz) { this->frequency_ = freq_khz; }
+  void set_initial_power(uint8_t power) { this->power_ = power; }
+
   // used by switch components
   void set_enabled(bool enabled);
 
@@ -134,8 +138,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   //////////////////////////////////////////////////////////////////////
   // STATE MANAGEMENT
   bool enabled_ = true;
-  uint8_t power_ = 100;
-  uint16_t frequency_ = 9330;  // default to 93.3 MHz
+  uint8_t power_;
+  uint16_t frequency_;
   bool has_been_setup_ = false;
 
   tune_status_t tune_status_last_;

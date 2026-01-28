@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 from esphome.components import sensor
 import esphome.config_validation as cv
-from esphome.const import DEVICE_CLASS_SOUND_PRESSURE, UNIT_DECIBEL
+from esphome.const import DEVICE_CLASS_SOUND_PRESSURE, ENTITY_CATEGORY_DIAGNOSTIC, UNIT_DECIBEL
 
 from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, Si4713Listener, si4713_ns
 
@@ -26,6 +26,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_CAPACITOR): sensor.sensor_schema(
             Si4713CapacitorSensor,
             accuracy_decimals=0,
+            entity_category=ENTITY_CATEGORY_DIAGNOSTIC,
         ),
     }
 )

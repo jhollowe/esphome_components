@@ -337,8 +337,7 @@ void Si4713Hub::set_power(uint8_t power) {
 }
 
 void Si4713Hub::set_power_direct_(uint8_t power) {
-  // power must be between 88 and 115 (dBµV) or 0 for off.
-  ESP_LOGI(TAG, "Setting power to %u dBµV", power);
+  // power must be between 88 and ~115 (dBµV) or 0 for off.
   uint8_t args[] = {
       0,  // reserved
       0,  // reserved

@@ -11,7 +11,16 @@ from esphome.const import (
     UNIT_MILLIVOLT,
 )
 
-from .. import CONF_SI4713_ID, DOMAIN, Si4713Hub, Si4713Listener, si4713_ns
+from .. import (
+    CONF_SI4713_ID,
+    DOMAIN,
+    FREQ_BOUNDS,
+    POWER_BOUNDS,
+    THRESHOLD_BOUNDS,
+    Si4713Hub,
+    Si4713Listener,
+    si4713_ns,
+)
 
 DEPENDENCIES = [DOMAIN]
 
@@ -30,8 +39,6 @@ CONF_POWER = "power_level"
 CONF_MAX_LINE_LEVEL = "max_line_level"
 CONF_LOW_THRESH = "low_threshold"
 CONF_HIGH_THRESH = "high_threshold"
-
-THRESHOLD_BOUNDS = (-70, 0)
 
 CONFIG_SCHEMA = cv.Schema(
     {
@@ -75,8 +82,8 @@ async def to_code(config):
     if freq_cfg := config.get(CONF_FREQUENCY):
         freq_num = await number.new_number(
             freq_cfg,
-            min_value=freq_cfg.get("min_value", 76.0),
-            max_value=freq_cfg.get("max_value", 108.0),
+            min_value=freq_cfg.get("min_value", FREQ_BOUNDS[0]),
+            max_value=freq_cfg.get("max_value", FREQ_BOUNDS[1]),
             step=freq_cfg.get("step", 0.05),
         )
         cg.add(freq_num.set_parent(paren))
@@ -86,8 +93,8 @@ async def to_code(config):
     if power_cfg := config.get(CONF_POWER):
         power_num = await number.new_number(
             power_cfg,
-            min_value=power_cfg.get("min_value", 88),
-            max_value=power_cfg.get("max_value", 115),
+            min_value=power_cfg.get("min_value", POWER_BOUNDS[0]),
+            max_value=power_cfg.get("max_value", POWER_BOUNDS[1]),
             step=power_cfg.get("step", 1.0),
         )
         cg.add(power_num.set_parent(paren))

@@ -21,11 +21,27 @@ Si4713Listener = si4713_ns.class_("Si4713Listener", cg.Parented.template(Si4713H
 
 DEFAULT_POLLING_INTERVAL = "5s"
 
+
+# New options for initial frequency and power
+CONF_INITIAL_FREQUENCY = "initial_frequency"
+CONF_INITIAL_POWER = "initial_power"
+
+# Range constants number entities/values
+FREQ_BOUNDS = (76.0, 108.0)  # MHz
+POWER_BOUNDS = (88, 115)
+THRESHOLD_BOUNDS = (-70, 0)
+
 CONFIG_SCHEMA = (
     cv.COMPONENT_SCHEMA.extend(
         {
             cv.GenerateID(CONF_ID): cv.declare_id(Si4713Hub),
             cv.Required(CONF_RESET_PIN): pins.gpio_output_pin_schema,
+            cv.Optional(CONF_INITIAL_FREQUENCY, default=93.3): cv.float_range(
+                min=FREQ_BOUNDS[0], max=FREQ_BOUNDS[1]
+            ),
+            cv.Optional(CONF_INITIAL_POWER, default=100): cv.int_range(
+                min=POWER_BOUNDS[0], max=POWER_BOUNDS[1]
+            ),
         }
     )
     .extend(i2c.i2c_device_schema(0x63))
@@ -33,11 +49,7 @@ CONFIG_SCHEMA = (
 )
 
 # Actions
-# Si4713SetFrequencyAction = si4713_ns.class_("Si4713SetFrequencyAction", automation.Action)
 # Si4713SetRDSAction = si4713_ns.class_("Si4713SetRDSAction", automation.Action)
-# Si4713GetPropertyAction = si4713_ns.class_("Si4713GetPropertyAction", automation.Action)
-# Si4713SetPropertyAction = si4713_ns.class_("Si4713SetPropertyAction", automation.Action)
-# Si4713GetASQAction = si4713_ns.class_("Si4713GetASQAction", automation.Action)
 
 
 async def to_code(config):
@@ -48,3 +60,11 @@ async def to_code(config):
     if reset_pin_config := config.get(CONF_RESET_PIN):
         pin = await cg.gpio_pin_expression(reset_pin_config)
         cg.add(var.set_reset_pin(pin))
+
+    # Set initial frequency and power if provided
+    if CONF_INITIAL_FREQUENCY in config:
+        # Convert MHz float to kHz int (e.g., 12.3 -> 1230)
+        freq_khz = int(config[CONF_INITIAL_FREQUENCY] * 100)
+        cg.add(var.set_initial_frequency(freq_khz))
+    if CONF_INITIAL_POWER in config:
+        cg.add(var.set_initial_power(config[CONF_INITIAL_POWER]))
