@@ -192,6 +192,9 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   sensor::Sensor *input_line_level_sensor_{nullptr};
   sensor::Sensor *tune_capacitor_sensor_{nullptr};
 #endif  // USE_SENSOR
+
+  i2c::ErrorCode err_ = i2c::ErrorCode::NO_ERROR;
+  void handle_i2c(i2c::ErrorCode e) { err_ = e; };
 };
 
 }  // namespace si4713
