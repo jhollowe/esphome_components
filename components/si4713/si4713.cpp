@@ -58,14 +58,19 @@ void Si4713Hub::setup() {
   this->reset_pin_->setup();
 
   this->toggle_reset_pin_();
-  this->power_up_();
+  if (this->power_up_()) {
+    this->mark_failed(LOG_STR("Si4713 power up failed, please check connections and I2C address"));
+    return;
+  }
 
   // Get hardware info and error if not Si4713
   rev_info_t info = this->get_info();
   this->print_rev_info(info);
   if (info.part_number != 13) {
-    ESP_LOGE(TAG, "Device is not Si4713 (part number %u)", info.part_number);
-    // TODO error out
+    ESP_LOGE(TAG, "Device is not Si4713 (part number is %u)", info.part_number);
+    // disable any further execution this component until esphome restart
+    this->mark_failed(LOG_STR("Connected device is not Si4713 (check I2C address)"));
+    return;
   }
 
   // pull initial data to current state variables
@@ -104,16 +109,16 @@ void Si4713Hub::setup() {
 
   this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
   uint8_t ps1_1[] = {0x0, 'J', 'H', 'O', 'L'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1)));
   this->wait_for_cts_();
   uint8_t ps1_2[] = {0x1, 'L', 'O', 'W', 'E'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2)));
   this->wait_for_cts_();
   uint8_t ps2_1[] = {0x2, ' ', 'R', 'a', 'd'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps2_1, sizeof(ps2_1));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_RDS_PS, ps2_1, sizeof(ps2_1)));
   this->wait_for_cts_();
   uint8_t ps2_2[] = {0x3, 'i', 'o', 'F', 'M'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps2_2, sizeof(ps2_2));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_RDS_PS, ps2_2, sizeof(ps2_2)));
   this->wait_for_cts_();
   this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 2);  // num of PS messages
 }
@@ -121,6 +126,8 @@ void Si4713Hub::setup() {
 void Si4713Hub::update() {
   tune_status_last_ = tune_status_curr_;
   asq_status_last_ = asq_status_curr_;
+
+  // TODO check for I2C errors and don't update values if there are any
 
   tune_status_curr_ = this->get_tune_status(true);
   asq_status_curr_ = this->get_asq_status(true);
@@ -180,7 +187,8 @@ void Si4713Hub::toggle_reset_pin_() {
   this->reset_pin_->digital_write(true);
 }
 
-void Si4713Hub::power_up_() {
+// returns true on error
+bool Si4713Hub::power_up_() {
   const uint8_t args[] = {
       // 0 CTS interrupt disabled
       // 0 GPO2 output disabled
@@ -195,23 +203,28 @@ void Si4713Hub::power_up_() {
   };
   uint8_t status;
   ESP_LOGV(TAG, "Powering up Si4713...");
-  this->write_register(SI4710_CMD_POWER_UP, args, sizeof(args));
+  err_ = this->write_register(SI4710_CMD_POWER_UP, args, sizeof(args));
+  ESP_LOGV(TAG, "POWER_UP I2C error code: %d", static_cast<int>(err_));
+  if (err_ != i2c::ErrorCode::NO_ERROR)
+    return true;
+
   status = this->wait_for_cts_();
   this->print_status(status);
+  return false;
 }
 
 // untested
 void Si4713Hub::power_down_() {
   uint8_t status;
   ESP_LOGV(TAG, "Powering down Si4713...");
-  this->write_register(SI4710_CMD_POWER_DOWN, nullptr, 0);
+  this->handle_i2c(this->write_register(SI4710_CMD_POWER_DOWN, nullptr, 0));
   status = this->wait_for_cts_();
   this->print_status(status);
 }
 
 rev_info_t Si4713Hub::get_info() {
   uint8_t buf[9];  // status byte + 8 bytes of info
-  this->read_register(SI4710_CMD_GET_REV, buf, 9);
+  this->handle_i2c(this->read_register(SI4710_CMD_GET_REV, buf, 9));
 
   // parse the returned data into a rev_info_t struct (skip the status byte)
   rev_info_t revinfo = &buf[1];
@@ -226,7 +239,7 @@ uint8_t Si4713Hub::wait_for_cts_() {
     ESP_LOGV(TAG, "Checking for CTS...");
     err_ = this->read_register(0x00, &status, 1);
     if (err_ != i2c::ErrorCode::NO_ERROR) {
-      ESP_LOGE(TAG, "I2C error while waiting for CTS: %d", static_cast<int>(err));
+      ESP_LOGE(TAG, "I2C error while waiting for CTS: %d", static_cast<int>(err_));
     }
     // TODO should this use SI4710_CMD_GET_INT_STATUS to get the status?
     max_attempts--;
@@ -246,7 +259,7 @@ void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
       static_cast<uint8_t>(value >> 8),
       static_cast<uint8_t>(value & 0xFF),
   };
-  this->write_register(SI4710_CMD_SET_PROPERTY, args, sizeof(args));
+  this->handle_i2c(this->write_register(SI4710_CMD_SET_PROPERTY, args, sizeof(args)));
 
   this->wait_for_cts_();
 }
@@ -259,7 +272,7 @@ uint16_t Si4713Hub::get_property(uint16_t property) {
       static_cast<uint8_t>(property & 0xFF),
   };
   uint8_t resp[4];  // status, reserved, value MSB, value LSB
-  this->write_read(args, sizeof(args), resp, sizeof(resp));
+  this->handle_i2c(this->write_read(args, sizeof(args), resp, sizeof(resp)));
 
   return (static_cast<uint16_t>(resp[2]) << 8) | resp[3];
 }
@@ -270,7 +283,7 @@ tune_status_t Si4713Hub::get_tune_status(bool clear_flags) {
       static_cast<uint8_t>(clear_flags ? 0x1 : 0x0),  // INTACK
   };
   uint8_t resp[8];  // status + 7 bytes of response
-  this->write_read(args, sizeof(args), resp, sizeof(resp));
+  this->handle_i2c(this->write_read(args, sizeof(args), resp, sizeof(resp)));
 
   // parse the returned data into a tune_status_t struct (keep the status byte)
   tune_status_t tunestatus = resp;
@@ -283,7 +296,7 @@ asq_status_t Si4713Hub::get_asq_status(bool clear_flags) {
       static_cast<uint8_t>(clear_flags ? 0x1 : 0x0),  // INTACK
   };
   uint8_t resp[5];  // status + 4 bytes of response
-  this->write_read(args, sizeof(args), resp, sizeof(resp));
+  this->handle_i2c(this->write_read(args, sizeof(args), resp, sizeof(resp)));
 
   // parse the returned data into an asq_status_t struct (keep the status byte)
   asq_status_t asqstatus = resp;
@@ -306,7 +319,7 @@ void Si4713Hub::set_freq(uint16_t freqKHz) {
       static_cast<uint8_t>(freqKHz >> 8),
       static_cast<uint8_t>(freqKHz & 0xFF),
   };
-  this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args)));
 
   // wait for Wait for the tuning to be done and CTS to be set
   // uint8_t status;
@@ -347,7 +360,7 @@ void Si4713Hub::set_power_direct_(uint8_t power) {
       power,
       0,  // let the IC choose the antenna capacitance
   };
-  this->write_register(SI4710_CMD_TX_TUNE_POWER, args, sizeof(args));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_TUNE_POWER, args, sizeof(args)));
 
   // wait CTS to be set
   this->wait_for_cts_();
@@ -363,7 +376,7 @@ void Si4713Hub::measure_freq(uint16_t freqKHz) {
       static_cast<uint8_t>(freqKHz & 0xFF),  // frequency low byte
       0,                                     // let the IC choose the antenna capacitance
   };
-  this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args));
+  this->handle_i2c(this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args)));
 
   // wait for the tuning to be done and CTS to be set
   // uint8_t status;

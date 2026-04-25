@@ -120,7 +120,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
  protected:
   // Low-level hardware control functions
   void toggle_reset_pin_();
-  void power_up_();
+  bool power_up_();
   uint8_t wait_for_cts_();
   void set_power_direct_(uint8_t power);
   void set_property_(uint16_t property, uint16_t value);
@@ -141,6 +141,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   uint8_t power_;
   uint16_t frequency_;
   bool has_been_setup_ = false;
+  bool needs_recovery_ = false;
 
   tune_status_t tune_status_last_;
   tune_status_t tune_status_curr_;
@@ -194,6 +195,12 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 #endif  // USE_SENSOR
 
   i2c::ErrorCode err_ = i2c::ErrorCode::NO_ERROR;
+  void setup_if_i2c_err() {
+    if (err_ != i2c::ErrorCode::NO_ERROR) {
+      ESP_LOGE(TAG, "I2C communication error detected, re-running si4713 setup to recover");
+      this->setup();
+    }
+  };
   void handle_i2c(i2c::ErrorCode e) { err_ = e; };
 };
 
