@@ -190,7 +190,7 @@ void Si4713Hub::power_up_() {
       0b00010010,
       // analog input mode
       0x50,
-      // digital input mode
+      // OR digital input mode
       // 0x0f
   };
   uint8_t status;
@@ -226,7 +226,7 @@ uint8_t Si4713Hub::wait_for_cts_() {
     ESP_LOGV(TAG, "Checking for CTS...");
     err_ = this->read_register(0x00, &status, 1);
     if (err_ != i2c::ErrorCode::NO_ERROR) {
-      ESP_LOGE(TAG, "I2C error while waiting for CTS: %d", static_cast<int>(err));
+      ESP_LOGE(TAG, "I2C error while waiting for CTS: %d", static_cast<int>(err_));
     }
     // TODO should this use SI4710_CMD_GET_INT_STATUS to get the status?
     max_attempts--;
