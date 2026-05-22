@@ -118,3 +118,18 @@ switch:
     enable_rds:
       name: "${friendly_name} Enable RDS"
       id: tx_enable_rds
+
+text:
+  - platform: template
+    mode: TEXT
+    id: rt_txt
+    name: Radio Text
+    max_length: 64
+    optimistic: True
+    on_value:
+      then:
+        - lambda: |-
+            static bool ab_flag = false;
+            auto blocks = id(tx_id).generate_radio_text_bytes(id(rt_txt).state.c_str(), ab_flag);
+            ab_flag = !ab_flag;
+            id(tx_id).clear_and_write_rds_buffer(blocks);
