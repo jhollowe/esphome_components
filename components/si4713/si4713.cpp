@@ -401,10 +401,9 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   this->set_property(SI4713_PROP_TX_RDS_PS_MISC, ps_misc);
 }
 
-void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint8_t> &buffer) {
-  if (buffer.size() % 6 != 0) {
-    ESP_LOGE(TAG, "RDS buffer size must be a multiple of 6 (16 bits each for Block 2, 3, 4), but got size %u",
-             buffer.size());
+void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) {
+  if (buffer.size() % 3 != 0) {
+    ESP_LOGE(TAG, "RDS buffer must contain groups of 3 16-bit blocks (2, 3, 4), but got %u", buffer.size());
     return;
   }
   uint8_t resp[6];  // status, flags, cbuff avail, cbuff used, fifo avail, fifo used
@@ -432,8 +431,12 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint8_t> &buffer) {
     return;
   }
 
-  // iterate over the buffer in 6 byte (Blocks 2, 3, 4) chunks
-  for (uint8_t i = 0; i < buffer.size(); i += 6) {
+  // iterate over the buffer in groups of 3 16-bit blocks (Blocks 2, 3, 4)
+  for (size_t i = 0; i < buffer.size(); i += 3) {
+    uint16_t block2 = buffer[i];
+    uint16_t block3 = buffer[i + 1];
+    uint16_t block4 = buffer[i + 2];
+
     uint8_t args[] = {
         SI4710_CMD_TX_RDS_BUFF,
         // 0 send to circular buffer (not FIFO)
@@ -443,31 +446,30 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint8_t> &buffer) {
         // 0 don't clear the interrupt
         static_cast<uint8_t>(0b00000100 | (i == 0 ? 0b00000010 : 0x00)),
         // 16 bits of block B
-        buffer[i],
-        buffer[i + 1],
+        static_cast<uint8_t>(block2 >> 8),
+        static_cast<uint8_t>(block2 & 0xFF),
         // 16 bits of block C
-        buffer[i + 2],
-        buffer[i + 3],
+        static_cast<uint8_t>(block3 >> 8),
+        static_cast<uint8_t>(block3 & 0xFF),
         // 16 bits of block D
-        buffer[i + 4],
-        buffer[i + 5],
+        static_cast<uint8_t>(block4 >> 8),
+        static_cast<uint8_t>(block4 & 0xFF),
     };
     this->write_read(args, sizeof(args), resp, sizeof(resp));
     // print out the response in hex for debugging
-    ESP_LOGD(TAG, "Set RDS buffer slot %u with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", i, resp[0], resp[1],
-             resp[2], resp[3], resp[4], resp[5]);
+    ESP_LOGD(TAG, "Set RDS buffer group %u (segment %u) with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", i,
+             i / 3, resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
     this->wait_for_cts_();
   }
 }
 
-std::vector<uint8_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool ab_flag) {
-  std::vector<uint8_t> blocks = {};
-  uint8_t len = strlen(s);
-  uint8_t segments = (len + 3) / 4;  // integer division gives the number of segments needed (will be padded)
+std::vector<uint16_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool ab_flag) {
+  std::vector<uint16_t> blocks = {};
+  size_t len = strlen(s);
+  size_t segments = (len + 3) / 4;  // integer division gives the number of segments needed (will be padded)
 
   if (len > 64) {
     ESP_LOGW(TAG, "RDS Radio Text is limited to 64 characters, but got %u. Truncating.", len);
-    // TODO truncate or just bail out?
     len = 64;
     segments = 16;
   }
@@ -486,20 +488,24 @@ std::vector<uint8_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool ab
     if (ab_flag) {
       block2 |= 0b00010000;  // set A/B flag
     }
-    blocks.push_back(static_cast<uint8_t>(block2 >> 8));    // block 2 high byte
-    blocks.push_back(static_cast<uint8_t>(block2 & 0xFF));  // block 2 low byte
+    // block3 contains char1 and char2, block4 contains char3 and char4
+    uint8_t c1 = (i * 4 < len) ? static_cast<uint8_t>(s[i * 4]) : '\n';
+    uint8_t c2 = (i * 4 + 1 < len) ? static_cast<uint8_t>(s[i * 4 + 1]) : '\n';
+    uint8_t c3 = (i * 4 + 2 < len) ? static_cast<uint8_t>(s[i * 4 + 2]) : '\n';
+    uint8_t c4 = (i * 4 + 3 < len) ? static_cast<uint8_t>(s[i * 4 + 3]) : '\n';
 
-    // the spec says to end the text with carriage return
-    blocks.push_back(static_cast<uint8_t>(i * 4 < len ? s[i * 4] : '\n'));          // char 1
-    blocks.push_back(static_cast<uint8_t>(i * 4 + 1 < len ? s[i * 4 + 1] : '\n'));  // char 2
-    blocks.push_back(static_cast<uint8_t>(i * 4 + 2 < len ? s[i * 4 + 2] : '\n'));  // char 3
-    blocks.push_back(static_cast<uint8_t>(i * 4 + 3 < len ? s[i * 4 + 3] : '\n'));  // char 4
+    uint16_t block3 = (static_cast<uint16_t>(c1) << 8) | static_cast<uint16_t>(c2);
+    uint16_t block4 = (static_cast<uint16_t>(c3) << 8) | static_cast<uint16_t>(c4);
+
+    blocks.push_back(block2);
+    blocks.push_back(block3);
+    blocks.push_back(block4);
   }
 
   // print out the generated blocks in hex for debugging
-  ESP_LOGD(TAG, "Generated RDS Radio Text blocks:");
-  for (size_t i = 0; i < blocks.size(); i += 1) {
-    ESP_LOGD(TAG, "Block %u (segment %u): 0x%02X", i, i / 6, blocks[i]);
+  ESP_LOGD(TAG, "Generated RDS Radio Text blocks (16-bit per entry):");
+  for (size_t i = 0; i < blocks.size(); ++i) {
+    ESP_LOGD(TAG, "Block %u (group %u): 0x%04X", i, i / 3, blocks[i]);
   }
 
   return blocks;

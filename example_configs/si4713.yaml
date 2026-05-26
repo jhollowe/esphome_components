@@ -129,6 +129,7 @@ text:
     on_value:
       then:
         - lambda: |-
+            // toggle ab_flag to tell receiver this is a new message
             static bool ab_flag = false;
             auto blocks = id(tx_id).generate_radio_text_bytes(id(rt_txt).state.c_str(), ab_flag);
             ab_flag = !ab_flag;

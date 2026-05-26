@@ -75,8 +75,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // unused by components but public for lambda use
   // TODO all the RDS stuff needs finishing/cleanup
   void setup_rds(uint16_t programID, uint8_t pty = 0);
-  void clear_and_write_rds_buffer(const std::vector<uint8_t> &buffer);
-  std::vector<uint8_t> generate_radio_text_bytes(const char *s, bool ab_flag = false);
+  void clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer);
+  std::vector<uint16_t> generate_radio_text_bytes(const char *s, bool ab_flag = false);
 
   // Listener management
   void register_listener(Si4713Listener *listener) { this->listeners_.push_back(listener); }
