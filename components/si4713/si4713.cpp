@@ -238,6 +238,14 @@ uint8_t Si4713Hub::wait_for_cts_() {
   return status;
 }
 
+// allow passing in an existing status byte to sort-circuit if previous command returned a status byte with CTS
+uint8_t Si4713Hub::wait_for_cts_(uint8_t status) {
+  if ((status & SI4710_STATUS_CTS) == 0) {
+    return this->wait_for_cts_();
+  }
+  return status;
+}
+
 void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
   uint8_t args[] = {
       0,  // must always be 0
@@ -459,7 +467,7 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) 
     // print out the response in hex for debugging
     ESP_LOGD(TAG, "Set RDS buffer group %u (segment %u) with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", i,
              i / 3, resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
-    this->wait_for_cts_();
+    this->wait_for_cts_(resp[0]);
   }
 }
 
@@ -482,8 +490,8 @@ std::vector<uint16_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool a
     // 0 version A
     // x traffic program (injected due to PS_MISC setting)
     // xxxxx PTY (injected due to PS_MISC setting)
-    // x A/B toggle (used to tell receiver to clear the buffer and update to new text)
-    // 0000 text chunk index
+    // y A/B toggle (used to tell receiver to clear the buffer and update to new text)
+    // zzzz text chunk index
     uint16_t block2 = 0b0010000000000000 | (0x0F & i);
     if (ab_flag) {
       block2 |= 0b00010000;  // set A/B flag
@@ -500,12 +508,6 @@ std::vector<uint16_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool a
     blocks.push_back(block2);
     blocks.push_back(block3);
     blocks.push_back(block4);
-  }
-
-  // print out the generated blocks in hex for debugging
-  ESP_LOGD(TAG, "Generated RDS Radio Text blocks (16-bit per entry):");
-  for (size_t i = 0; i < blocks.size(); ++i) {
-    ESP_LOGD(TAG, "Block %u (group %u): 0x%04X", i, i / 3, blocks[i]);
   }
 
   return blocks;

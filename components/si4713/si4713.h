@@ -123,6 +123,7 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   void toggle_reset_pin_();
   void power_up_();
   uint8_t wait_for_cts_();
+  uint8_t wait_for_cts_(uint8_t status);
   void set_power_direct_(uint8_t power);
   void set_property_(uint16_t property, uint16_t value);
   void get_prop_table_(prop_table_t &table);
