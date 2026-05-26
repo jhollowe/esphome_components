@@ -103,19 +103,19 @@ void Si4713Hub::setup() {
   this->print_tune_status(this->get_tune_status());  // DEBUG
 
   this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
-  uint8_t ps1_1[] = {0x0, 'J', 'H', 'O', 'L'};
+  uint8_t ps1_1[] = {0x0, 'H', 'o', 'l', 'l'};
   this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
   this->wait_for_cts_();
-  uint8_t ps1_2[] = {0x1, 'L', 'O', 'W', 'E'};
+  uint8_t ps1_2[] = {0x1, 'o', 'w', 'F', 'M'};
   this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
   this->wait_for_cts_();
-  uint8_t ps2_1[] = {0x2, ' ', 'R', 'a', 'd'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps2_1, sizeof(ps2_1));
-  this->wait_for_cts_();
-  uint8_t ps2_2[] = {0x3, 'i', 'o', 'F', 'M'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps2_2, sizeof(ps2_2));
-  this->wait_for_cts_();
-  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 2);  // num of PS messages
+  // uint8_t ps2_1[] = {0x2, ' ', 'R', 'a', 'd'};
+  // this->write_register(SI4710_CMD_TX_RDS_PS, ps2_1, sizeof(ps2_1));
+  // this->wait_for_cts_();
+  // uint8_t ps2_2[] = {0x3, 'i', 'o', 'F', 'M'};
+  // this->write_register(SI4710_CMD_TX_RDS_PS, ps2_2, sizeof(ps2_2));
+  // this->wait_for_cts_();
+  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);  // num of PS messages
 }
 
 void Si4713Hub::update() {
