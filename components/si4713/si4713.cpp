@@ -390,6 +390,7 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   // 0 not artificial head
   // 1 stereo
   // 1 FIFO and BUFFER are forced to use the following TP/PTY
+  //        (hardware injects them into any RDS group in the FIFO/buffer)
   // 0 not traffic program
   // 00000 PTY Program Type code https://en.wikipedia.org/wiki/Radio_Data_System#Program_types
   // 0 not traffic announcement
@@ -407,6 +408,29 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint8_t> &buffer) {
     return;
   }
   uint8_t resp[6];  // status, flags, cbuff avail, cbuff used, fifo avail, fifo used
+
+  // if the buffer is empty, just send a clear command
+  if (buffer.empty()) {
+    uint8_t args[] = {
+        SI4710_CMD_TX_RDS_BUFF,
+        // 0 send to circular buffer (not FIFO)
+        // 0000 reserved
+        // 0 load into the buffer
+        // 1 clear the buffer
+        // 0 don't clear the interrupt
+        0b00000010,
+        0,  // the rest of the bytes are ignored when clearing
+        0,
+        0,
+        0,
+        0,
+    };
+    this->write_read(args, sizeof(args), resp, sizeof(resp));
+    ESP_LOGD(TAG, "Cleared RDS buffer with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", resp[0], resp[1],
+             resp[2], resp[3], resp[4], resp[5]);
+    this->wait_for_cts_();
+    return;
+  }
 
   // iterate over the buffer in 6 byte (Blocks 2, 3, 4) chunks
   for (uint8_t i = 0; i < buffer.size(); i += 6) {
