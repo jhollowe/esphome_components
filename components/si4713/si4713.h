@@ -130,10 +130,6 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
 
   std::vector<Si4713Listener *> listeners_{};
 
-  // TODO remove if unused
-  void measure_freq(uint16_t freq_khz);
-  void power_down_();
-
   // Pin definitions
   GPIOPin *reset_pin_;
 

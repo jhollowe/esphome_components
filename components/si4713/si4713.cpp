@@ -200,15 +200,6 @@ void Si4713Hub::power_up_() {
   this->print_status(status);
 }
 
-// untested
-void Si4713Hub::power_down_() {
-  uint8_t status;
-  ESP_LOGV(TAG, "Powering down Si4713...");
-  this->write_register(SI4710_CMD_POWER_DOWN, nullptr, 0);
-  status = this->wait_for_cts_();
-  this->print_status(status);
-}
-
 rev_info_t Si4713Hub::get_info() {
   uint8_t buf[9];  // status byte + 8 bytes of info
   this->read_register(SI4710_CMD_GET_REV, buf, 9);
@@ -248,7 +239,7 @@ uint8_t Si4713Hub::wait_for_cts_(uint8_t status) {
 
 void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
   uint8_t args[] = {
-      0,  // must always be 0
+      0,  // reserved
       static_cast<uint8_t>(property >> 8),
       static_cast<uint8_t>(property & 0xFF),
       static_cast<uint8_t>(value >> 8),
@@ -262,7 +253,7 @@ void Si4713Hub::set_property_(uint16_t property, uint16_t value) {
 uint16_t Si4713Hub::get_property(uint16_t property) {
   uint8_t args[] = {
       SI4710_CMD_GET_PROPERTY,
-      0,  // must always be 0
+      0,  // reserved
       static_cast<uint8_t>(property >> 8),
       static_cast<uint8_t>(property & 0xFF),
   };
@@ -361,27 +352,6 @@ void Si4713Hub::set_power_direct_(uint8_t power) {
   this->wait_for_cts_();
 }
 
-void Si4713Hub::measure_freq(uint16_t freqKHz) {
-  // frequency must be between 7600 and 10800 (76.0 MHz to 108.0 MHz)
-  // and in 50 kHz increments. The value is in 10 kHz units.
-  ESP_LOGI(TAG, "Measuring Noise on %0.2f MHz", freqKHz / 100.0);
-  uint8_t args[] = {
-      0,                                     // reserved
-      static_cast<uint8_t>(freqKHz >> 8),    // frequency high byte
-      static_cast<uint8_t>(freqKHz & 0xFF),  // frequency low byte
-      0,                                     // let the IC choose the antenna capacitance
-  };
-  this->write_register(SI4710_CMD_TX_TUNE_FREQ, args, sizeof(args));
-
-  // wait for the tuning to be done and CTS to be set
-  // uint8_t status;
-  // do {
-  //   status = this->wait_for_cts_();
-  // } while ((status & SI4710_STATUS_CTS) == 0);
-
-  this->wait_for_cts_();
-}
-
 void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   this->set_property(SI4713_PROP_TX_AUDIO_DEVIATION, 6625);  // 66.25KHz (default is 68.25)
   this->set_property(SI4713_PROP_TX_RDS_DEVIATION, 200);     // 2KHz (default)
@@ -392,7 +362,6 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   // this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);    // 1 message (default)
   this->set_property(SI4713_PROP_TX_RDS_PS_AF, 0xE0E0);  // no AF (default)
   this->set_property(SI4713_PROP_TX_RDS_FIFO_SIZE, 0);   // no FIFO (default)
-  // this->set_property(SI4713_PROP_TX_COMPONENT_ENABLE, 0x0007);  // enable RDS, stereo, tone
   // 0 PTY is static
   // 0 not compressed
   // 0 not artificial head
@@ -497,10 +466,10 @@ std::vector<uint16_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool a
       block2 |= 0b00010000;  // set A/B flag
     }
     // block3 contains char1 and char2, block4 contains char3 and char4
-    uint8_t c1 = (i * 4 < len) ? static_cast<uint8_t>(s[i * 4]) : '\n';
-    uint8_t c2 = (i * 4 + 1 < len) ? static_cast<uint8_t>(s[i * 4 + 1]) : '\n';
-    uint8_t c3 = (i * 4 + 2 < len) ? static_cast<uint8_t>(s[i * 4 + 2]) : '\n';
-    uint8_t c4 = (i * 4 + 3 < len) ? static_cast<uint8_t>(s[i * 4 + 3]) : '\n';
+    uint8_t c1 = (i * 4 < len) ? static_cast<uint8_t>(s[i * 4]) : ' ';
+    uint8_t c2 = (i * 4 + 1 < len) ? static_cast<uint8_t>(s[i * 4 + 1]) : ' ';
+    uint8_t c3 = (i * 4 + 2 < len) ? static_cast<uint8_t>(s[i * 4 + 2]) : ' ';
+    uint8_t c4 = (i * 4 + 3 < len) ? static_cast<uint8_t>(s[i * 4 + 3]) : ' ';
 
     uint16_t block3 = (static_cast<uint16_t>(c1) << 8) | static_cast<uint16_t>(c2);
     uint16_t block4 = (static_cast<uint16_t>(c3) << 8) | static_cast<uint16_t>(c4);
