@@ -102,20 +102,8 @@ void Si4713Hub::setup() {
   this->set_power(power_);
   this->print_tune_status(this->get_tune_status());  // DEBUG
 
-  this->setup_rds(0x27CB, 9);  // program ID KJAH, PTY=9 (top 40)
-  uint8_t ps1_1[] = {0x0, 'H', 'o', 'l', 'l'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_1, sizeof(ps1_1));
-  this->wait_for_cts_();
-  uint8_t ps1_2[] = {0x1, 'o', 'w', 'F', 'M'};
-  this->write_register(SI4710_CMD_TX_RDS_PS, ps1_2, sizeof(ps1_2));
-  this->wait_for_cts_();
-  // uint8_t ps2_1[] = {0x2, ' ', 'R', 'a', 'd'};
-  // this->write_register(SI4710_CMD_TX_RDS_PS, ps2_1, sizeof(ps2_1));
-  // this->wait_for_cts_();
-  // uint8_t ps2_2[] = {0x3, 'i', 'o', 'F', 'M'};
-  // this->write_register(SI4710_CMD_TX_RDS_PS, ps2_2, sizeof(ps2_2));
-  // this->wait_for_cts_();
-  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);  // num of PS messages
+  this->setup_rds(prg_id_, pty_);  // program ID KJAH, PTY=9 (top 40)
+  this->set_ps(ps_buffer_);
 }
 
 void Si4713Hub::update() {
@@ -480,6 +468,39 @@ std::vector<uint16_t> Si4713Hub::generate_radio_text_bytes(const char *s, bool a
   }
 
   return blocks;
+}
+
+void Si4713Hub::set_ps(std::string ps) {
+  // PS is groups of 8 characters, sent chunks of 4 characters
+  // Radios only show 8 characters at a time, but the Si4713 will rotate through up to 11 PS's
+  uint8_t len = ps.length();
+
+  if (len > 88) {
+    ESP_LOGW(TAG, "RDS Program Service (PS) is limited to 88 characters, but got %u. Truncating.", len);
+    ps = ps.substr(0, 88);
+    len = 88;
+  }
+
+  uint8_t slots = (len + 3) / 4;
+  uint8_t resp[1];
+
+  for (uint8_t i = 0; i < slots; i++) {
+    uint8_t args[] = {
+        SI4710_CMD_TX_RDS_PS,
+        // 5 bits of PS segment index (0: first 4 chars or PS0, 1: second 4 chars or PS1, etc.)
+        static_cast<uint8_t>(i & 0x1F),
+        // 4 chars of PS data (padded with spaces if not full)
+        static_cast<uint8_t>(i * 4 < len) ? ps[i * 4] : ' ',
+        static_cast<uint8_t>(i * 4 + 1 < len) ? ps[i * 4 + 1] : ' ',
+        static_cast<uint8_t>(i * 4 + 2 < len) ? ps[i * 4 + 2] : ' ',
+        static_cast<uint8_t>(i * 4 + 3 < len) ? ps[i * 4 + 3] : ' ',
+    };
+    // this->write_register(SI4710_CMD_TX_RDS_PS, args, sizeof(args));
+    this->write_read(args, sizeof(args), resp, sizeof(resp));
+  }
+
+  // num of PS messages is half the number of slots (rounded up)
+  this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, slots / 2 + slots % 2);
 }
 
 void Si4713Hub::print_rev_info(const rev_info_t &info) {

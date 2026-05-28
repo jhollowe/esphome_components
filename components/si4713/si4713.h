@@ -73,8 +73,8 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   uint16_t get_property(uint16_t property);
 
   // unused by components but public for lambda use
-  // TODO all the RDS stuff needs finishing/cleanup
   void setup_rds(uint16_t programID, uint8_t pty = 0);
+  void set_ps(std::string ps);
   void clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer);
   std::vector<uint16_t> generate_radio_text_bytes(const char *s, bool ab_flag = false);
 
@@ -136,9 +136,16 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   //////////////////////////////////////////////////////////////////////
   // STATE MANAGEMENT
   bool enabled_ = true;
+  bool has_been_setup_ = false;
+
+  // Hub Initialized values
+  uint16_t prg_id_ = 0x611B;           // default program ID (0x611B = WESP)
+  uint8_t pty_ = 0;                    // default program type (only 5 bits used, so 0-31)
+  std::string ps_buffer_ = "ESPHome";  // buffer PS message (88 chars, 11 groups of 8 chars)
+
+  // Configurables
   uint8_t power_;
   uint16_t frequency_;
-  bool has_been_setup_ = false;
 
   tune_status_t tune_status_last_;
   tune_status_t tune_status_curr_;
