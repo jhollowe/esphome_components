@@ -25,6 +25,9 @@ DEFAULT_POLLING_INTERVAL = "5s"
 # New options for initial frequency and power
 CONF_INITIAL_FREQUENCY = "initial_frequency"
 CONF_INITIAL_POWER = "initial_power"
+CONF_PTY = "pty"
+CONF_PROGRAM_ID = "program_id"
+CONF_INITIAL_PS = "initial_ps"
 
 # Range constants number entities/values
 FREQ_BOUNDS = (76.0, 108.0)  # MHz
@@ -41,6 +44,11 @@ CONFIG_SCHEMA = (
             ),
             cv.Optional(CONF_INITIAL_POWER, default=100): cv.int_range(
                 min=POWER_BOUNDS[0], max=POWER_BOUNDS[1]
+            ),
+            cv.Optional(CONF_PTY, default=0): cv.int_range(min=0, max=31),
+            cv.Optional(CONF_PROGRAM_ID, default=0): cv.int_range(min=0, max=0xFFFF),
+            cv.Optional(CONF_INITIAL_PS, default="ESPHome"): cv.All(
+                cv.string, cv.ByteLength(max=88)
             ),
         }
     )
@@ -68,3 +76,9 @@ async def to_code(config):
         cg.add(var.set_initial_frequency(freq_khz))
     if CONF_INITIAL_POWER in config:
         cg.add(var.set_initial_power(config[CONF_INITIAL_POWER]))
+    if CONF_PTY in config:
+        cg.add(var.set_pty_stored(config[CONF_PTY]))
+    if CONF_PROGRAM_ID in config:
+        cg.add(var.set_program_id_stored(config[CONF_PROGRAM_ID]))
+    if CONF_INITIAL_PS in config:
+        cg.add(var.set_initial_ps(config[CONF_INITIAL_PS]))

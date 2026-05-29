@@ -67,6 +67,9 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // Setters for initial values
   void set_initial_frequency(uint16_t freq_khz) { this->frequency_ = freq_khz; }
   void set_initial_power(uint8_t power) { this->power_ = power; }
+  void set_pty_stored(uint8_t pty) { this->pty_ = pty & 0x1F; }  // only 5 bits used
+  void set_program_id_stored(uint16_t program_id) { this->prg_id_ = program_id; }
+  void set_initial_ps(std::string ps) { this->ps_buffer_ = ps.substr(0, 88); }  // PS can only hold 88 chars
 
   // used by switch components
   void set_enabled(bool enabled);
