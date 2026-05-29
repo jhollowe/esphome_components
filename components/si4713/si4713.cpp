@@ -349,7 +349,7 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   this->set_property(SI4713_PROP_TX_RDS_PS_REPEAT_COUNT, 3);  // 3 repeats (default)
   // this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, 1);    // 1 message (default)
   this->set_property(SI4713_PROP_TX_RDS_PS_AF, 0xE0E0);  // no AF (default)
-  this->set_property(SI4713_PROP_TX_RDS_FIFO_SIZE, 0);   // no FIFO (default)
+  this->set_property(SI4713_PROP_TX_RDS_FIFO_SIZE, 4);   // 4 blocks (3 for a message plus 1 required padding)
   // 0 PTY is static
   // 0 not compressed
   // 0 not artificial head
@@ -366,9 +366,10 @@ void Si4713Hub::setup_rds(uint16_t programID, uint8_t pty) {
   this->set_property(SI4713_PROP_TX_RDS_PS_MISC, ps_misc);
 }
 
-void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) {
+void Si4713Hub::clear_and_write_rds(const std::vector<uint16_t> &buffer, bool is_fifo) {
+  const char *type_str = is_fifo ? "FIFO" : "buffer";
   if (buffer.size() % 3 != 0) {
-    ESP_LOGE(TAG, "RDS buffer must contain groups of 3 16-bit blocks (2, 3, 4), but got %u", buffer.size());
+    ESP_LOGE(TAG, "RDS %s must contain groups of 3 16-bit blocks (2, 3, 4), but got %u", type_str, buffer.size());
     return;
   }
   uint8_t resp[6];  // status, flags, cbuff avail, cbuff used, fifo avail, fifo used
@@ -377,12 +378,12 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) 
   if (buffer.empty()) {
     uint8_t args[] = {
         SI4710_CMD_TX_RDS_BUFF,
-        // 0 send to circular buffer (not FIFO)
+        // 0 send to circular buffer, 1 send to FIFO
         // 0000 reserved
         // 0 load into the buffer
         // 1 clear the buffer
         // 0 don't clear the interrupt
-        0b00000010,
+        static_cast<uint8_t>(0b00000100 | (is_fifo ? 0b10000000 : 0x00)),
         0,  // the rest of the bytes are ignored when clearing
         0,
         0,
@@ -390,9 +391,9 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) 
         0,
     };
     this->write_read(args, sizeof(args), resp, sizeof(resp));
-    ESP_LOGD(TAG, "Cleared RDS buffer with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", resp[0], resp[1],
-             resp[2], resp[3], resp[4], resp[5]);
-    this->wait_for_cts_();
+    ESP_LOGV(TAG, "Cleared RDS %s (buffer %u/%u, FIFO %u/%u)", type_str, resp[3], resp[2] + resp[3], resp[5],
+             resp[4] + resp[5]);
+    this->wait_for_cts_(resp[0]);
     return;
   }
 
@@ -404,12 +405,12 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) 
 
     uint8_t args[] = {
         SI4710_CMD_TX_RDS_BUFF,
-        // 0 send to circular buffer (not FIFO)
+        // 0 send to circular buffer, 1 send to FIFO
         // 0000 reserved
         // 1 load into the buffer
         // 0/1 clear the buffer (if i==0)
         // 0 don't clear the interrupt
-        static_cast<uint8_t>(0b00000100 | (i == 0 ? 0b00000010 : 0x00)),
+        static_cast<uint8_t>(0b00000100 | (is_fifo ? 0b10000000 : 0x00) | (i == 0 ? 0b00000010 : 0x00)),
         // 16 bits of block B
         static_cast<uint8_t>(block2 >> 8),
         static_cast<uint8_t>(block2 & 0xFF),
@@ -421,9 +422,8 @@ void Si4713Hub::clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer) 
         static_cast<uint8_t>(block4 & 0xFF),
     };
     this->write_read(args, sizeof(args), resp, sizeof(resp));
-    // print out the response in hex for debugging
-    ESP_LOGD(TAG, "Set RDS buffer group %u (segment %u) with response 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X 0x%02X", i,
-             i / 3, resp[0], resp[1], resp[2], resp[3], resp[4], resp[5]);
+    ESP_LOGV(TAG, "Set RDS %s groups %u-%u (buffer %u/%u, FIFO %u/%u)", type_str, i, i + 2, resp[3], resp[2] + resp[3],
+             resp[5], resp[4] + resp[5]);
     this->wait_for_cts_(resp[0]);
   }
 }
@@ -501,6 +501,61 @@ void Si4713Hub::set_ps(std::string ps) {
 
   // num of PS messages is half the number of slots (rounded up)
   this->set_property(SI4713_PROP_TX_RDS_MESSAGE_COUNT, slots / 2 + slots % 2);
+}
+
+std::vector<uint16_t> Si4713Hub::generate_timestamp_bytes(ESPTime utc_time) {
+  ESP_LOGD(TAG, "time in generate_timestamp_bytes: %s with offset %d", utc_time.strftime("%Y-%m-%d %H:%M:%S").c_str(),
+           utc_time.timezone_offset());
+
+  // Modified Julian Date (17 bits)
+  // Calculate MJD from year/month/day using the Julian Day Number algorithm.
+  // MJD = JDN - 2400001, where JDN is the Julian Day Number for the date.
+  uint32_t mjd;
+  {
+    int y = static_cast<int>(utc_time.year);
+    int m = static_cast<int>(utc_time.month);
+    int d = static_cast<int>(utc_time.day_of_month);
+    int a = (14 - m) / 12;
+    int y2 = y + 4800 - a;
+    int m2 = m + 12 * a - 3;
+    int jdn = d + (153 * m2 + 2) / 5 + 365 * y2 + y2 / 4 - y2 / 100 + y2 / 400 - 32045;
+    mjd = static_cast<uint32_t>(jdn - 2400001);
+  }
+
+  uint8_t utc_hour = utc_time.hour;      // 5 bits (0-23)
+  uint8_t utc_minute = utc_time.minute;  // 6 bits (0-59)
+
+  // 5 bits (in 30-minute increments, range -15.5 to +15.5h)
+  uint8_t local_offset = static_cast<uint8_t>(std::abs(utc_time.timezone_offset()) / 1800);
+  // 1 bit sign (0 = + (east of UTC), 1 = - (west of UTC))
+  bool local_offset_negative = utc_time.timezone_offset() < 0;
+
+  ESP_LOGD(TAG, "mjd: 0x%05X, hours: 0x%02X, minutes: 0x%02X, local_offset: 0x%02X, local_offset_negative: %u", mjd,
+           utc_hour, utc_minute, local_offset, local_offset_negative);
+
+  std::vector<uint16_t> blocks = {
+      // https://en.wikipedia.org/wiki/Radio_Data_System#Group_type_4_%E2%80%93_Version_A_%E2%80%93_Clock_time_and_date
+      // 0100 group type 4 (Clock/Time)
+      // 0 version A
+      // x traffic program (injected due to PS_MISC setting)
+      // xxxxx PTY (injected due to PS_MISC setting)
+      // 000 reserved
+      // yy first 2 bits of mjd
+      0b0100000000000000 | ((mjd >> 15) & 0x3),
+      // bits 0-14 of mjd then 1 bit of hour
+      ((mjd & 0x7FFF) << 1) | ((utc_hour >> 4) & 0x1),
+      // hhh bits 0-3 of hour
+      // mmmmmm minute
+      // s local offset sign
+      // lllll local offset
+      ((utc_hour & 0xF) << 12) | ((utc_minute & 0x3F) << 6) | ((local_offset_negative ? 1 : 0) << 5) |
+          (local_offset & 0x1F),
+  };
+
+  // dump the blocks as hex
+  ESP_LOGD(TAG, "Generated timestamp bytes: 0x%04X 0x%04X 0x%04X", blocks[0], blocks[1], blocks[2]);
+
+  return blocks;
 }
 
 void Si4713Hub::print_rev_info(const rev_info_t &info) {

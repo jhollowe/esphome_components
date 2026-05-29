@@ -8,6 +8,9 @@
 #include "esphome/core/hal.h"
 #include "si4713_consts.h"
 #include "si4713_structs.h"
+#include <cmath>
+
+#include "esphome/core/time.h"
 
 #ifdef USE_BUTTON
 #include "esphome/components/button/button.h"
@@ -75,8 +78,9 @@ class Si4713Hub : public PollingComponent, public i2c::I2CDevice {
   // unused by components but public for lambda use
   void setup_rds(uint16_t programID, uint8_t pty = 0);
   void set_ps(std::string ps);
-  void clear_and_write_rds_buffer(const std::vector<uint16_t> &buffer);
+  void clear_and_write_rds(const std::vector<uint16_t> &buffer, bool is_fifo = false);
   std::vector<uint16_t> generate_radio_text_bytes(const char *s, bool ab_flag = false);
+  std::vector<uint16_t> generate_timestamp_bytes(ESPTime time);
 
   // Listener management
   void register_listener(Si4713Listener *listener) { this->listeners_.push_back(listener); }
