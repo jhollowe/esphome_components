@@ -12,5 +12,20 @@
     "**/example_configs/*.yaml": "esphome",
     "chrono": "cpp"
   },
-  "github.copilot.chat.codeGeneration.useInstructionFiles": true
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "cSpell.words": [
+    "ASQINT",
+    "asqstatus",
+    "bsensor",
+    "esphome",
+    "IALH",
+    "INTACK",
+    "LOGD",
+    "LOGI",
+    "LOGV",
+    "LOGW",
+    "RDSINT",
+    "STCINT",
+    "tunestatus"
+  ]
 }
