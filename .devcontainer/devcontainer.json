@@ -37,10 +37,10 @@
 				"mhutchie.git-graph",
 				"streetsidesoftware.code-spell-checker",
 				"ms-python.python",
-				"ms-python.pylint",
-				"ms-python.flake8",
+				// "ms-python.pylint",
+				// "ms-python.flake8",
 				"charliermarsh.ruff",
-				"visualstudioexptteam.vscodeintellicode",
+				// "visualstudioexptteam.vscodeintellicode",
 				"redhat.vscode-yaml",
 				"ms-vscode.cpptools",
 				"editorconfig.editorconfig",
@@ -49,12 +49,6 @@
 			"settings": {
 				"python.languageServer": "Pylance",
 				"python.pythonPath": "/usr/bin/python3",
-				"pylint.args": [
-					"--rcfile=${workspaceFolder}/pyproject.toml"
-				],
-				"flake8.args": [
-					"--config=${workspaceFolder}/.flake8"
-				],
 				"ruff.configuration": "${workspaceFolder}/pyproject.toml",
 				"[python]": {
 					// VS will say "Value is not accepted" before building the devcontainer, but the warning

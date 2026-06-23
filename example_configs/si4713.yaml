@@ -1,0 +1,136 @@
+substitutions:
+  name: radio-tx
+  device_description: FM Radio Transmitter using Si4713
+  friendly_name: FM Radio Transmitter
+
+external_components:
+  - source: ../components
+    components: [si4713]
+    # - source: github://jhollowe/esphome_components
+    #   components: [si4713]
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+esphome:
+  name: ${name}
+  name_add_mac_suffix: false
+  friendly_name: ${friendly_name}
+
+api:
+  encryption:
+    key: "ps8x3urIdHKJ83Ls2JlIHkLdITJnWqSiOfLnTqBWD74="
+
+ota:
+  - platform: esphome
+    password: "91f3a25017022969968c7c7b2fe7721e"
+
+wifi:
+  ssid: !secret fake_wifi_ssid
+  password: !secret fake_wifi_password
+
+  ap:
+
+mdns:
+  disabled: false
+
+captive_portal:
+
+web_server:
+  port: 80
+  version: 3
+
+i2c:
+  id: fm_tx_bus
+  sda: GPIO14
+  scl: GPIO13
+  scan: false
+
+si4713:
+  id: tx_id
+  reset_pin: GPIO12
+
+binary_sensor:
+  - platform: si4713
+    overmodulation:
+      name: "${friendly_name} Overmodulation"
+      id: tx_overmod
+    audio_high:
+      name: "${friendly_name} Audio High"
+      id: tx_audio_high
+    audio_low:
+      name: "${friendly_name} Audio Low"
+      id: tx_audio_low
+
+button:
+  - platform: si4713
+    reset:
+      name: "${friendly_name} Reset"
+      id: tx_reset
+
+number:
+  - platform: si4713
+    frequency:
+      name: "${friendly_name} Frequency"
+      id: tx_frequency
+    power_level:
+      name: "${friendly_name} Power"
+      id: tx_power
+    max_line_level:
+      name: "${friendly_name} Max Input Line Level"
+      id: tx_max_line_level
+    low_threshold:
+      name: "${friendly_name} Audio Low Threshold"
+      id: tx_asq_low_threshold
+    high_threshold:
+      name: "${friendly_name} Audio High Threshold"
+      id: tx_asq_high_threshold
+
+sensor:
+  - platform: si4713
+    line_level:
+      name: "${friendly_name} Input Line Level"
+      id: tx_line_level
+    tune_capacitor:
+      name: "${friendly_name} Tune Capacitor"
+      id: tx_tune_capacitor
+
+switch:
+  - platform: si4713
+    enable_tx:
+      name: "${friendly_name} Enable Transmit"
+      id: tx_enable
+      restore_mode: RESTORE_DEFAULT_ON
+    mute_left:
+      name: "${friendly_name} Mute Left Channel"
+      id: tx_mute_left
+    mute_right:
+      name: "${friendly_name} Mute Right Channel"
+      id: tx_mute_right
+    enable_pilot:
+      name: "${friendly_name} Enable Pilot Tone"
+      id: tx_enable_pilot
+    enable_stereo:
+      name: "${friendly_name} Enable Stereo"
+      id: tx_enable_stereo
+    enable_rds:
+      name: "${friendly_name} Enable RDS"
+      id: tx_enable_rds
+
+text:
+  - platform: template
+    mode: TEXT
+    id: rt_txt
+    name: Radio Text
+    max_length: 64
+    optimistic: True
+    on_value:
+      then:
+        - lambda: |-
+            // toggle ab_flag to tell receiver this is a new message
+            static bool ab_flag = false;
+            auto blocks = id(tx_id).generate_radio_text_bytes(id(rt_txt).state.c_str(), ab_flag);
+            ab_flag = !ab_flag;
+            id(tx_id).clear_and_write_rds_buffer(blocks);
